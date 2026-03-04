@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 
 
@@ -16,7 +16,8 @@ class User(BaseModel):
     gender: Optional[str] = None
     location: Optional[str] = None
     loyalty_program: bool = False
-    order_history: List[str] = []
+    order_history: List[str] = Field(default_factory=list)
     preferred_cuisine: Optional[str] = None
     order_frequency: Optional[str] = None
     role: UserRole = UserRole.CUSTOMER
+    
