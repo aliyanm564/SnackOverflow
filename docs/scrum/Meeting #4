@@ -1,0 +1,43 @@
+Date: 03-04-2026
+Type of Meeting: Sprint #2 – Domain Layer Implementation
+Attendees: Aman Ullah Waseem, Muhammad Aliyan, Temi Faji, Sukhi
+
+Key Discussion Points:
+
+Confirmed adoption of a layered architecture, beginning implementation with the domain layer as the system foundation.
+Reviewed complete domain folder structure, including models and rules.
+Agreed that all core business entities must be implemented before moving to service or API layers.
+Distributed domain models among team members to ensure parallel development.
+Assigned business rule files separately to maintain separation of concerns.
+Discussed need for unit testing immediately after each domain component is completed.
+
+Action Items & Responsibilities:
+Muhammad Aliyan
+- Implement user.py
+- Implement enums.py
+- Implement role_rules.py
+- Ensure proper enum validation and role enforcement logic
+- Add unit tests for user model, enums, and role rules
+
+Sukhi
+- Implement restaurant.py
+- Implement menu_item.py
+- Ensure data integrity and required fields are properly defined
+
+Aman Ullah Waseem
+- Implement order.py
+- Implement order_rules.py
+- Ensure correct use of OrderStatus
+Validate order modification and completion logic
+
+Temi Faji
+- Implement delivery.py
+- Implement pricing_rules.py
+- Implement pricing calculations including subtotal, delivery fee, and tax logic
+
+All Members
+- Maintain consistent layered architecture structure
+- Push code regularly to GitHub
+- Write unit tests for assigned components
+- Ensure imports follow project module structure
+- Prepare domain layer for integration testing in next sprint
