@@ -1,0 +1,35 @@
+The system follows a layered architecture where responsibilities are separated into well-defined layers. Each layer provides services to the layer above it and depends only on the layer directly below it. The backend exposes a RESTful API implemented using FastAPI, following a client/server interaction model.
+
+Architecture Description:
+The system is organized into the following layers:
+
+Presentation
+- Implemented using FastAPI REST endpoints.
+- Handles HTTP requests and responses in JSON format.
+- Manages user interaction with the system through API calls.
+- Performs request validation and enforces authentication and authorization rules.
+This layer coordinates requests and responses.
+
+Application/Service
+- Contains application-level logic and use-case workflows.
+- Coordinates actions such as order creation, order updates, payment simulation, delivery assignment, and notification triggering.
+- Acts as an intermediary between the presentation layer and the domain layer.
+This layer ensures that system use cases are executed correctly without exposing domain logic to the API layer.
+
+Domain/Business
+- Defines core domain entities such as User, Restaurant, MenuItem, Order, and Delivery.
+- Enforces domain rules including:
+- Valid order status transitions
+- Role restrictions (customer vs. restaurant owner/manager)
+- Entity relationships and constraints
+- Pricing and consistency rules
+This layer encapsulates the business rules of the food delivery domain and remains independent of API and database concerns.
+
+Data Access
+- Responsible for storing and retrieving data from the database.
+- Uses an ORM to map domain entities to persistent storage.
+- Enforces referential integrity and prevents invalid operations such as deleting entities referenced by active orders.
+Changes in the database implementation affect only this layer and the adjacent domain layer.
+
+Justification:
+The layered architecture was chosen because it cleanly separates distinct responsibilities, such as API handling, business workflows, and data storage. This structure centralizes complex rules, like orders and pricing, keeping them isolated from external interfaces. As a result, the system is easier to maintain, secure, and update without affecting other parts of the application.
