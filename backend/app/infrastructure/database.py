@@ -3,7 +3,7 @@ import hashlib
 import os
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Generator
+from typing import Generator, Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -145,7 +145,7 @@ def _stable_menu_item_id(restaurant_id: str, food_item: str) -> str:
     return hashlib.md5(raw.encode()).hexdigest()[:12]
 
 
-def seed_from_csv(csv_path: str, session: Session | None = None) -> None:
+def seed_from_csv(csv_path: str, session: Optional[Session] = None) -> None:
     """
     Reads food_delivery.csv and populates the database.
 
