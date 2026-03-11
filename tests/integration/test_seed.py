@@ -3,14 +3,14 @@ from backend.app.infrastructure.orm_models import UserORM, OrderORM, Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-CSV_PATH = "backend/data/food_delivery.csv"  # ← fix to your actual path
+CSV_PATH = "backend/data/food_delivery.csv"
 
 def test_seed_row_counts():
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)()
 
-    seed_from_csv(CSV_PATH, session=session)  # ← inject session
+    seed_from_csv(CSV_PATH, session=session)
 
     assert session.query(UserORM).count() > 0
 
