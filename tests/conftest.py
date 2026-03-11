@@ -9,6 +9,22 @@ from backend.app.domain.models.orders import Order
 from backend.app.domain.models.delivery import Delivery
 from backend.app.domain.models.enums import OrderStatus, DeliveryMethod
 
+"Shared across all infrastructure layer tests."
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from backend.app.infrastructure.orm_models import Base
+
+@pytest.fixture(scope="function")
+def db_session():
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    yield session
+    session.close()
+    Base.metadata.drop_all(engine)
+
 @pytest.fixture
 def customer_user():
     return User(customer_id="cust-001", name="Alice", age=30,
