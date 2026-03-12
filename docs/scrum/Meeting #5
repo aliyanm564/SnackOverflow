@@ -1,0 +1,55 @@
+Date: 03-07-2026
+Type of Meeting: Sprint #2
+Attendees: Aman Ullah Waseem, Muhammad Aliyan, Temi Faji, Sukhi
+
+Key Discussion Points:
+- Complete implementation of the infrastructure layer, including database setup, ORM models, and repository classes for all core entities.
+- Began work on the application layer, implementing service classes to coordinate use cases for domain entities.
+- Confirmed service assignments for each team member to ensure parallel development of application logic: authentication, user management, orders, delivery, and pricing workflows.
+- Agreed on consistent coding standards, repository patterns, and dependency injection to maintain architecture.
+
+Action Items & Responsibilities:
+Muhammad Aliyan
+Infrastructure Layer:
+- database.py
+- orm_models.py
+- base_repository.py
+Application Layer:
+- exceptions.py
+- auth_service.py
+- user_service.py
+- payment_service.py
+Write unit tests for all assigned services and integration tests for authentication and payment workflows.
+
+Sukhi
+Infrastructure Layer:
+- repositories/restaurant_repository.py
+- repositories/delivery_repository.py
+Application Layer:
+- restaurant_service.py
+- delivery_service.py
+Add unit tests for service logic and data integrity checks.
+
+Aman Ullah Waseem
+Infrastructure Layer:
+- repositories/user_repository.py
+- repositories/notification_repository.py
+Application Layer:
+- order_service.py
+- notification_service.py
+Ensure correct application of business rules from order_rules.py and write unit tests for services.
+
+Temi Faji
+- Infrastructure Layer:
+- repositories/menu_repository.py
+- repositories/order_repository.py
+Application Layer:
+- menu_service.py
+- pricing_service.py
+Handle calculation logic including pricing, taxes, and delivery fees, and add unit tests to validate correctness.
+
+All Members
+- Maintain consistent architecture across domain, application, and infrastructure layers.
+- Push all code regularly to GitHub and keep branches up to date.
+- Ensure all imports follow project module structure.
+- Verify that all domain models, rules, repositories, and services are fully covered by unit and integrations tests.
