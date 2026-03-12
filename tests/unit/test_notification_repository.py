@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from backend.app.infrastructure.repositories.notification_repository import (
     Notification,
@@ -8,7 +8,7 @@ from backend.app.infrastructure.repositories.notification_repository import (
 
 def test_save_and_get_by_id(db_session):
     repo = NotificationRepository(db_session)
-    created_at = datetime.utcnow()
+    created_at = datetime.now(timezone.utc)
 
     saved = repo.save(
         Notification(
@@ -49,8 +49,8 @@ def test_delete_existing_and_missing_notification(db_session):
 
 def test_get_by_user_returns_newest_first(db_session):
     repo = NotificationRepository(db_session)
-    older = datetime.utcnow() - timedelta(hours=1)
-    newer = datetime.utcnow()
+    older = datetime.now(timezone.utc) - timedelta(hours=1)
+    newer = datetime.now(timezone.utc)
 
     repo.save(
         Notification(0, "user-1", "order_created", "Older", older, False)
