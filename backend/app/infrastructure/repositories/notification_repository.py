@@ -13,7 +13,7 @@ dict for its return values and exposes a `Notification` named tuple so
 callers have a typed interface without a domain dependency.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, NamedTuple, Optional
 
 from sqlalchemy.orm import Session
@@ -162,7 +162,7 @@ class NotificationRepository(BaseRepository[Notification, int]):
             user_id=user_id,
             event_type=event_type,
             message=message,
-            created_at=datetime.utcnow(),
+            created_at = datetime.now(timezone.utc),
             is_read=False,
         )
         self._db.add(orm_obj)
@@ -175,11 +175,15 @@ class NotificationRepository(BaseRepository[Notification, int]):
 
     @staticmethod
     def _to_domain(orm_obj: NotificationORM) -> Notification:
+        created_at = orm_obj.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+
         return Notification(
             notification_id=orm_obj.notification_id,
             user_id=orm_obj.user_id,
             event_type=orm_obj.event_type,
             message=orm_obj.message,
-            created_at=orm_obj.created_at,
+            created_at=created_at,
             is_read=orm_obj.is_read,
-        )
+    )
