@@ -1,15 +1,3 @@
-"""
-delivery_repository.py
-----------------------
-Concrete repository for Delivery persistence.
-
-Responsibilities
-----------------
-* CRUD on the `deliveries` table.
-* Domain-specific queries: filter by delivery method, route type,
-  weather/traffic condition, and delayed deliveries.
-* ORM ↔ domain mapping.
-"""
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from backend.app.domain.models.delivery import Delivery
@@ -21,12 +9,7 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
     def __init__(self, db_session: Session):
         self._db = db_session
 
-    # ------------------------------------------------------------------
-    # BaseRepository contract
-    # ------------------------------------------------------------------
-
     def get_by_id(self, entity_id: str) -> Optional[Delivery]:
-        """Fetch a Delivery by its ID."""
         orm_obj = self._db.get(DeliveryORM, entity_id)
         return self._to_domain(orm_obj) if orm_obj else None
 
@@ -46,13 +29,8 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         self._db.delete(orm_obj)
         self._db.flush()
         return True
-
-    # ------------------------------------------------------------------
-    # Domain-specific queries
-    # ------------------------------------------------------------------
-            
+ 
     def get_by_delivery_method(self, method: DeliveryMethod) -> List[Delivery]:
-        """return all delieveries with the specified delivery method."""
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.delivery_method == method.value)
@@ -61,7 +39,6 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_route_type(self, route_type: RouteType) -> List[Delivery]:
-        """return all delieveries with the specified route type."""
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.route_type == route_type.value)
@@ -70,7 +47,6 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_delayed(self, min_delay_minutes: float = 0.0) -> List[Delivery]:
-        """return deliveries whose delay exceeds the given threshold."""
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.delivery_delay > min_delay_minutes)
@@ -80,7 +56,6 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_traffic_condition(self, condition:str) -> List[Delivery]:
-        """Filter deliveries by traffic condition."""
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.traffic_condition == condition)
@@ -89,7 +64,6 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_weather_condition(self, condition:str) -> List[Delivery]:
-        """Filter deliveries by weather condition."""
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.weather_condition == condition)
@@ -105,10 +79,6 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
             .all()
         )
         return [self._to_domain(r) for r in rows]
-
-    # ------------------------------------------------------------------
-    # Mapping helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _to_domain(orm_obj: DeliveryORM) -> Delivery:
@@ -159,4 +129,3 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
                 predicted_delivery_mode=domain_obj.predicted_delivery_mode,
                 traffic_avoidance=domain_obj.traffic_avoidance,
             )
-        

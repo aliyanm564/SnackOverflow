@@ -20,7 +20,6 @@ class PriceBreakdown:
     loyalty_discount: float
     grand_total: float
 
-
 class PricingService:
 
     DEFAULT_TAX_RATE = 0.13
@@ -107,4 +106,3 @@ class PricingService:
                 price_map[item_id] = item.price
 
         return price_map
-    

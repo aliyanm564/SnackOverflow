@@ -1,25 +1,8 @@
-"""
-restaurant_repository.py
-------------------------
-Concrete repository for Restaurant persistence.
-
-Responsibilities
-----------------
-* CRUD on the `restaurants` table.
-* Domain-specific queries: filter by location, search by name, find by owner.
-* ORM ↔ domain mapping.
-
-"""
 from typing import List, Optional
 from sqlalchemy.orm import Session 
 from backend.app.domain.models.restaurant import Restaurant
 from backend.app.infrastructure.orm_models import RestaurantORM
 from backend.app.infrastructure.repositories.base_repository import BaseRepository
-
-
-#------------------------------------------------------------------
-# Class and Constructor
-#------------------------------------------------------------------
 
 class RestaurantRepository(BaseRepository[Restaurant, str]):
 
@@ -46,10 +29,6 @@ class RestaurantRepository(BaseRepository[Restaurant, str]):
         self._db.delete(orm_obj)
         self._db.flush()
         return True
-    
-    # ------------------------------------------------------------------
-    # Domain-specific queries
-    # ------------------------------------------------------------------
 
     def get_by_owner(self, owner_id: str) -> List[Restaurant]:
         rows = ( 
@@ -83,10 +62,7 @@ class RestaurantRepository(BaseRepository[Restaurant, str]):
             .all()
         )
         return [self._to_domain(r) for r in rows]
-    # ------------------------------------------------------------------
-    # Mapping helpers
-    # ------------------------------------------------------------------
-
+    
     @staticmethod
     def _to_domain(orm_obj: RestaurantORM) -> Restaurant:
         return Restaurant(

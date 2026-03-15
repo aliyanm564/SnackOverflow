@@ -37,7 +37,7 @@ def test_order_history_is_not_shared_between_instances():
     user1.order_history.append("order_1")
 
     assert user1.order_history == ["order_1"]
-    assert user2.order_history == []  # should NOT contain order_1
+    assert user2.order_history == []
 
 
 def test_invalid_role_raises_error():

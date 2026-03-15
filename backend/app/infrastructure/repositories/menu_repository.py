@@ -8,15 +8,8 @@ from backend.app.infrastructure.repositories.base_repository import BaseReposito
 
 
 class MenuRepository(BaseRepository[MenuItem, str]):
-    """SQLAlchemy-backed repository for MenuItem entities."""
-
     def __init__(self, db: Session) -> None:
         self._db = db
-
-
-# ------------------------------------------------------------------
-    # BaseRepository contract
-    # ------------------------------------------------------------------
 
     def get_by_id(self, entity_id: str) -> Optional[MenuItem]:
         orm_obj = self._db.get(MenuItemORM, entity_id)
@@ -39,12 +32,7 @@ class MenuRepository(BaseRepository[MenuItem, str]):
         self._db.flush()
         return True
 
-    # ------------------------------------------------------------------
-    # Domain-specific queries
-    # ------------------------------------------------------------------
-
     def get_by_restaurant(self, restaurant_id: str) -> List[MenuItem]:
-        """Return all menu items for a given restaurant."""
         rows = (
             self._db.query(MenuItemORM)
             .filter(MenuItemORM.restaurant_id == restaurant_id)
@@ -53,7 +41,6 @@ class MenuRepository(BaseRepository[MenuItem, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_category(self, category: str) -> List[MenuItem]:
-        """Return all menu items in a given cuisine category."""
         rows = (
             self._db.query(MenuItemORM)
             .filter(MenuItemORM.category == category)
@@ -62,7 +49,6 @@ class MenuRepository(BaseRepository[MenuItem, str]):
         return [self._to_domain(r) for r in rows]
 
     def search_by_name(self, query: str) -> List[MenuItem]:
-        """Case-insensitive partial name match across all restaurants."""
         rows = (
             self._db.query(MenuItemORM)
             .filter(MenuItemORM.name.ilike(f"%{query}%"))
@@ -71,7 +57,6 @@ class MenuRepository(BaseRepository[MenuItem, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_price_range(self, min_price: float, max_price: float) -> List[MenuItem]:
-        """Return items whose price falls within the inclusive range."""
         rows = (
             self._db.query(MenuItemORM)
             .filter(MenuItemORM.price >= min_price, MenuItemORM.price <= max_price)
@@ -85,18 +70,10 @@ class MenuRepository(BaseRepository[MenuItem, str]):
         offset: int = 0,
         limit: int = 20,
     ) -> List[MenuItem]:
-        """
-        Paginated item listing.
-        Optionally scoped to a single restaurant if restaurant_id is provided.
-        """
         q = self._db.query(MenuItemORM)
         if restaurant_id:
             q = q.filter(MenuItemORM.restaurant_id == restaurant_id)
         return [self._to_domain(r) for r in q.offset(offset).limit(limit).all()]
-
-    # ------------------------------------------------------------------
-    # Mapping helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _to_domain(orm_obj: MenuItemORM) -> MenuItem:

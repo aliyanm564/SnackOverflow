@@ -7,10 +7,6 @@ from backend.app.domain.rules.pricing_rules import (
 )
 
 
-# --------------------------------
-# Subtotal Tests
-# --------------------------------
-
 def test_calculate_subtotal_basic():
     order = Order(
         order_id="1",
@@ -43,13 +39,8 @@ def test_calculate_subtotal_missing_price():
 
     subtotal = calculate_subtotal(order, prices)
 
-    # unknown_item should default to 0
     assert subtotal == 10.0
 
-
-# --------------------------------
-# Delivery Fee Tests
-# --------------------------------
 
 def test_delivery_fee_with_no_order_value():
     order = Order(
@@ -76,14 +67,9 @@ def test_delivery_fee_with_distance():
 
     fee = calculate_delivery_fee(orders)
 
-    # distance defaults to 0
     assert fee == 5.0
 
 
-
-# --------------------------------
-# Total Cost Tests
-# --------------------------------
 
 def test_calculate_total():
     order = Order(
@@ -105,5 +91,3 @@ def test_calculate_total():
     expected_total = 20 + 5 + 2.6
 
     assert total == pytest.approx(expected_total)
-
-

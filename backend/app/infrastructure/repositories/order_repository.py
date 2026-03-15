@@ -12,14 +12,8 @@ _ITEMS_SEP = ","
 
 
 class OrderRepository(BaseRepository[Order, str]):
-    """SQLAlchemy-backed repository for Order entities."""
-
     def __init__(self, db: Session) -> None:
         self._db = db
-
-    # ------------------------------------------------------------------
-    # BaseRepository contract
-    # ------------------------------------------------------------------
 
     def get_by_id(self, entity_id: str) -> Optional[Order]:
         orm_obj = self._db.get(OrderORM, entity_id)
@@ -42,12 +36,7 @@ class OrderRepository(BaseRepository[Order, str]):
         self._db.flush()
         return True
 
-    # ------------------------------------------------------------------
-    # Domain-specific queries
-    # ------------------------------------------------------------------
-
     def get_by_customer(self, customer_id: str) -> List[Order]:
-        """Return all orders placed by a customer, newest first."""
         rows = (
             self._db.query(OrderORM)
             .filter(OrderORM.customer_id == customer_id)
@@ -57,7 +46,6 @@ class OrderRepository(BaseRepository[Order, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_restaurant(self, restaurant_id: str) -> List[Order]:
-        """Return all orders placed at a restaurant, newest first."""
         rows = (
             self._db.query(OrderORM)
             .filter(OrderORM.restaurant_id == restaurant_id)
@@ -67,7 +55,6 @@ class OrderRepository(BaseRepository[Order, str]):
         return [self._to_domain(r) for r in rows]
 
     def get_by_status(self, status: OrderStatus) -> List[Order]:
-        """Return all orders in the given status."""
         rows = (
             self._db.query(OrderORM)
             .filter(OrderORM.status == status.value)
@@ -89,10 +76,6 @@ class OrderRepository(BaseRepository[Order, str]):
         return [self._to_domain(r) for r in rows]
 
     def update_status(self, order_id: str, new_status: OrderStatus) -> Optional[Order]:
-        """
-        Update the status of an existing order in place.
-        Returns the updated domain Order, or None if not found.
-        """
         orm_obj = self._db.get(OrderORM, order_id)
         if orm_obj is None:
             return None
@@ -107,7 +90,6 @@ class OrderRepository(BaseRepository[Order, str]):
         offset: int = 0,
         limit: int = 20,
     ) -> List[Order]:
-        """Paginated order listing with optional customer/restaurant scope."""
         q = self._db.query(OrderORM)
         if customer_id:
             q = q.filter(OrderORM.customer_id == customer_id)
@@ -115,10 +97,6 @@ class OrderRepository(BaseRepository[Order, str]):
             q = q.filter(OrderORM.restaurant_id == restaurant_id)
         q = q.order_by(OrderORM.order_time.desc()).offset(offset).limit(limit)
         return [self._to_domain(r) for r in q.all()]
-
-    # ------------------------------------------------------------------
-    # Mapping helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _to_domain(orm_obj: OrderORM) -> Order:

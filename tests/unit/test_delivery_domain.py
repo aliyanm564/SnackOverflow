@@ -4,10 +4,6 @@ from backend.app.domain.models.delivery import Delivery
 from backend.app.domain.models.enums import DeliveryMethod, RouteType
 
 
-# --------------------------------
-# Basic Creation Test
-# --------------------------------
-
 def test_create_delivery_with_required_field():
     delivery = Delivery(order_id="order123")
 
@@ -16,10 +12,6 @@ def test_create_delivery_with_required_field():
     assert delivery.delivery_distance is None
     assert delivery.delivery_method is None
 
-
-# --------------------------------
-# Full Object Creation
-# --------------------------------
 
 def test_delivery_with_all_fields():
     now = datetime.now()
@@ -46,10 +38,6 @@ def test_delivery_with_all_fields():
     assert delivery.traffic_avoidance is True
 
 
-# --------------------------------
-# Enum Validation
-# --------------------------------
-
 def test_delivery_method_from_string():
     delivery = Delivery(order_id="1", delivery_method="car")
 
@@ -61,10 +49,6 @@ def test_route_type_from_string():
 
     assert delivery.route_type == RouteType.ROUTE_3
 
-
-# --------------------------------
-# Invalid Enum Values
-# --------------------------------
 
 def test_invalid_delivery_method():
     with pytest.raises(ValueError):

@@ -58,5 +58,3 @@ def test_search_by_name(db_session):
 
     assert len(results) >= 1
     assert any(r.name == "Pizza Pizza" for r in results)
-
-
