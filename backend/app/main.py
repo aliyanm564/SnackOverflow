@@ -1,0 +1,55 @@
+import os
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from backend.app.application.exceptions import (
+    AppError, AuthenticationError, AuthorizationError,
+    BusinessRuleError, ConflictError, NotFoundError, PaymentError,
+)
+from backend.app.infrastructure.database import init_db, seed_from_csv
+
+_CSV_PATH = os.getenv("CSV_PATH", "backend/data/food_delivery.csv")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    if os.path.exists(_CSV_PATH):
+        seed_from_csv(_CSV_PATH)
+    yield
+
+app = FastAPI(
+    title="SnackOverflow",
+    version="1.0.0",
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+_STATUS_MAP = {
+    NotFoundError:       404,
+    ConflictError:       409,
+    AuthenticationError: 401,
+    AuthorizationError:  403,
+    BusinessRuleError:   422,
+    PaymentError:        402,
+}
+
+@app.exception_handler(AppError)
+async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
+    status_code = _STATUS_MAP.get(type(exc), 400)
+    return JSONResponse(status_code=status_code, content={"detail": str(exc)})
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    return {"status": "ok"}
