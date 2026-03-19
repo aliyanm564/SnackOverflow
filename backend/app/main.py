@@ -11,6 +11,7 @@ from backend.app.application.exceptions import (
 )
 from backend.app.infrastructure.database import init_db, seed_from_csv
 from backend.app.presentation.routers.auth_router import router as auth_router
+from backend.app.presentation.routers.order_router import router as order_router
 from backend.app.presentation.routers.user_router import router as user_router
 
 _CSV_PATH = os.getenv("CSV_PATH", "backend/data/food_delivery.csv")
@@ -55,6 +56,7 @@ async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
 API_PREFIX = "/api/v1"
 
 app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(order_router, prefix=API_PREFIX)
 app.include_router(user_router, prefix=API_PREFIX)
 
 @app.get("/health", tags=["Health"])
