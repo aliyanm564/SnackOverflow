@@ -10,6 +10,8 @@ from backend.app.application.exceptions import (
     BusinessRuleError, ConflictError, NotFoundError, PaymentError,
 )
 from backend.app.infrastructure.database import init_db, seed_from_csv
+from backend.app.presentation.routers.auth_router import router as auth_router
+from backend.app.presentation.routers.user_router import router as user_router
 
 _CSV_PATH = os.getenv("CSV_PATH", "backend/data/food_delivery.csv")
 
@@ -49,6 +51,11 @@ _STATUS_MAP = {
 async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
     status_code = _STATUS_MAP.get(type(exc), 400)
     return JSONResponse(status_code=status_code, content={"detail": str(exc)})
+
+API_PREFIX = "/api/v1"
+
+app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(user_router, prefix=API_PREFIX)
 
 @app.get("/health", tags=["Health"])
 def health_check():
