@@ -9,7 +9,7 @@ from backend.app.presentation.dependencies import (
     get_current_user,
     get_notification_service,
 )
-from backend.app.presentation.schemas import NotificationResponse
+from backend.app.presentation.schemas.schemas import NotificationResponse
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 

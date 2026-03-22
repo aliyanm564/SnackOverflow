@@ -4,7 +4,7 @@ from backend.app.application.exceptions import AuthenticationError, ConflictErro
 from backend.app.application.services.auth_service import AuthService
 from backend.app.domain.models.user import UserRole
 from backend.app.presentation.dependencies import get_auth_service
-from backend.app.presentation.schemas import (
+from backend.app.presentation.schemas.schemas import (
     LoginRequest,
     RegisterRequest,
     TokenResponse,

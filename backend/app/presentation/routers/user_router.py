@@ -6,7 +6,7 @@ from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.application.services.user_service import UserService
 from backend.app.domain.models.user import User, UserRole
 from backend.app.presentation.dependencies import get_current_user, get_user_service
-from backend.app.presentation.schemas import (
+from backend.app.presentation.schemas.schemas import (
     ChangeRoleRequest,
     UpdateProfileRequest,
     UserResponse,
