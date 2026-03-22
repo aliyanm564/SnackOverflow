@@ -12,7 +12,7 @@ from backend.app.domain.models.enums import OrderStatus
 from backend.app.domain.models.orders import Order
 from backend.app.domain.models.user import User, UserRole
 from backend.app.presentation.dependencies import get_current_user, get_order_service
-from backend.app.presentation.schemas import OrderResponse, PlaceOrderRequest
+from backend.app.presentation.schemas.schemas import OrderResponse, PlaceOrderRequest
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 

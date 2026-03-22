@@ -14,6 +14,7 @@ from backend.app.presentation.routers.auth_router import router as auth_router
 from backend.app.presentation.routers.order_router import router as order_router
 from backend.app.presentation.routers.notification_router import router as notification_router
 from backend.app.presentation.routers.user_router import router as user_router
+from backend.app.presentation.routers.menu_router import router as menu_router
 
 _CSV_PATH = os.getenv("CSV_PATH", "backend/data/food_delivery.csv")
 
@@ -60,7 +61,11 @@ app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(order_router, prefix=API_PREFIX)
 app.include_router(notification_router, prefix=API_PREFIX)
 app.include_router(user_router, prefix=API_PREFIX)
+app.include_router(menu_router, prefix=API_PREFIX)
 
 @app.get("/health", tags=["Health"])
 def health_check():
     return {"status": "ok"}
+
+for route in app.routes:
+    print(route.path)
