@@ -1,0 +1,61 @@
+Date: 03-21-2026
+Type of Meeting: Sprint #4
+Attendees: Aman Ullah Waseem, Muhammad Aliyan, Temi Faji, Sukhnoor Sekhon
+
+Key Discussion Points:
+- Finished the presentation layer, including all API routers for core features.
+- Ensured all routers are properly connected and working with existing services.
+- Completed main.py, including full FastAPI setup and registering all routers.
+- Finalized the Docker setup, including Dockerfile and docker-compose configuration.
+- Verified that the full system runs correctly using Docker.
+- Confirmed that all layers are fully integrated and working together.
+
+Action Items & Responsibilities:
+Muhammad Aliyan
+Presentation Layer:
+- auth_router.py
+- user_router.py
+- schemas.py
+- dependencies.py
+Core Setup:
+- main.py
+- Dockerfile
+- docker-compose.yml
+Responsibilities:
+- Maintain Docker setup and ensure the app runs correctly.
+- Fix any integration issues.
+
+Sukhnoor Sekhon
+Presentation Layer:
+- restaurant_router.py
+- delivery_router.py
+Responsibilities:
+- Ensure restaurant and delivery endpoints work correctly.
+- Handle edge cases and errors.
+- Add tests for restaurant and delivery features.
+
+Aman Ullah Waseem
+Presentation Layer:
+- order_router.py
+- notification_router.py
+Responsibilities:
+- Ensure order and notification features work correctly.
+- Validate order workflows.
+- Add tests for order and notification features.
+
+Temi Faji
+Presentation Layer:
+- menu_router.py
+- payment_router.py
+Responsibilities:
+- Ensure menu and payment endpoints work correctly.
+- Verify pricing logic in full workflows.
+- Add tests for pricing and payment features.
+
+All Members
+- Test the full system using Docker (end-to-end).
+- Fix bugs found during testing.
+- Keep API structure consistent.
+- Push final code and review pull requests.
+- Ensure good test coverage.
+- Prepare for final submission and documentation.
