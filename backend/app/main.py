@@ -17,6 +17,7 @@ from backend.app.presentation.routers.user_router import router as user_router
 from backend.app.presentation.routers.restaurant_router import router as restaurant_router
 
 from backend.app.presentation.routers.delivery_router import router as delivery_router
+from backend.app.presentation.routers.payment_router import router as payment_router
 
 _CSV_PATH = os.getenv("CSV_PATH", "backend/data/food_delivery.csv")
 
@@ -66,6 +67,7 @@ app.include_router(user_router, prefix=API_PREFIX)
 app.include_router(restaurant_router, prefix=API_PREFIX)
 
 app.include_router(delivery_router, prefix=API_PREFIX)
+app.include_router(payment_router, prefix=API_PREFIX)
 
 @app.get("/health", tags=["Health"])
 def health_check():
