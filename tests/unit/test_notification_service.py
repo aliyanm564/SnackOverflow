@@ -4,7 +4,7 @@ import pytest
 
 from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.application.services.notification_service import NotificationService
-from backend.app.infrastructure.repositories.notification_repository import Notification
+from backend.app.domain.models.notification import Notification
 
 
 def make_service(notification_repo):

@@ -1,21 +1,11 @@
 from datetime import datetime, timezone
-from typing import List, NamedTuple, Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
+from backend.app.domain.models.notification import Notification
 from backend.app.infrastructure.orm_models import NotificationORM
 from backend.app.infrastructure.repositories.base_repository import BaseRepository
-
-
-class Notification(NamedTuple):
-
-    notification_id: int
-    user_id: str
-    event_type: str
-    message: str
-    created_at: datetime
-    is_read: bool
-
 
 class NotificationRepository(BaseRepository[Notification, int]):
     def __init__(self, db: Session) -> None:
@@ -36,7 +26,7 @@ class NotificationRepository(BaseRepository[Notification, int]):
             created_at=entity.created_at,
             is_read=entity.is_read,
         )
-        if entity.notification_id:
+        if entity.notification_id is not None:
             orm_obj.notification_id = entity.notification_id
             orm_obj = self._db.merge(orm_obj)
         else:
@@ -112,7 +102,7 @@ class NotificationRepository(BaseRepository[Notification, int]):
             user_id=user_id,
             event_type=event_type,
             message=message,
-            created_at = datetime.now(timezone.utc),
+            created_at=datetime.now(timezone.utc),
             is_read=False,
         )
         self._db.add(orm_obj)
@@ -132,4 +122,4 @@ class NotificationRepository(BaseRepository[Notification, int]):
             message=orm_obj.message,
             created_at=created_at,
             is_read=orm_obj.is_read,
-    )
+        )
