@@ -66,6 +66,14 @@ class PricingService:
         object.__setattr__(temp_order, "delivery_distance", delivery_distance)
 
         return self._compute_breakdown(temp_order, customer, item_prices)
+    
+    def calculate_taxes(self,subtotal: float) -> float:
+        return round(subtotal * self._tax_rate, 2)
+    
+    def calculate_loyalty_discount(self, subtotal: float, customer: User) -> float:
+        if customer.loyalty_program:
+            return round(subtotal * self.LOYALTY_DISCOUNT_RATE, 2)
+        return 0.0
 
     def _compute_breakdown(
         self,
@@ -78,14 +86,15 @@ class PricingService:
 
         subtotal = calculate_subtotal(order, item_prices)
         delivery_fee = calculate_delivery_fee(order, base_fee=self._base_delivery_fee)
-        taxes = round(subtotal * self._tax_rate, 2)
+        taxes = self.calculate_taxes(subtotal)
 
         loyalty_discount = 0.0
         if customer.loyalty_program:
-            loyalty_discount = round(subtotal * self.LOYALTY_DISCOUNT_RATE, 2)
+            loyalty_discount = self.calculate_loyalty_discount(subtotal, customer)
 
+        base_total = calculate_total(order, item_prices, self._tax_rate)
         grand_total = round(
-            subtotal + delivery_fee + taxes - loyalty_discount, 2
+            base_total - loyalty_discount, 2
         )
 
         return PriceBreakdown(
