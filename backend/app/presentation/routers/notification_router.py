@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 
 from backend.app.application.services.notification_service import NotificationService
+from backend.app.domain.models.notification import Notification
 from backend.app.domain.models.user import User
 from backend.app.presentation.dependencies import (
     get_current_user,
@@ -14,7 +15,7 @@ from backend.app.presentation.schemas import NotificationResponse
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
 
-def _to_response(notification) -> NotificationResponse:
+def _to_response(notification: Notification) -> NotificationResponse:
     return NotificationResponse(
         notification_id=notification.notification_id,
         user_id=notification.user_id,
