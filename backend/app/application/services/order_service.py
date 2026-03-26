@@ -27,6 +27,7 @@ from backend.app.application.exceptions import (
     NotFoundError,
 )
 from backend.app.domain.models.enums import OrderStatus
+from backend.app.domain.models.menu_item import MenuItem
 from backend.app.domain.models.orders import Order
 from backend.app.domain.models.user import User, UserRole
 from backend.app.domain.rules.orders_rules import can_modify_order, mark_order_completed
@@ -80,9 +81,8 @@ class OrderService:
         if not food_item_ids:
             raise BusinessRuleError("An order must contain at least one item.")
 
-        self._validate_items_belong_to_restaurant(food_item_ids, restaurant_id)
-
-        order_value = self._calculate_order_value(food_item_ids)
+        items = self._get_restaurant_items(food_item_ids, restaurant_id)
+        order_value = self._calculate_order_value(items)
 
         order = Order(
             order_id=str(uuid.uuid4()),
@@ -106,10 +106,7 @@ class OrderService:
     # ------------------------------------------------------------------
 
     def get_order(self, order_id: str) -> Order:
-        order = self._orders.get_by_id(order_id)
-        if order is None:
-            raise NotFoundError(f"Order '{order_id}' not found.")
-        return order
+        return self._get_order_or_raise(order_id)
 
     def get_orders_for_customer(self, customer_id: str) -> List[Order]:
         return self._orders.get_by_customer(customer_id)
@@ -163,7 +160,7 @@ class OrderService:
         * The order must belong to the requesting customer.
         * can_modify_order (domain rule) must return True (order is PENDING).
         """
-        order = self.get_order(order_id)
+        order = self._get_order_or_raise(order_id)
 
         if order.customer_id != requesting_user.customer_id:
             raise AuthorizationError("You can only cancel your own orders.")
@@ -195,7 +192,7 @@ class OrderService:
         This method is intentionally package-internal; it is only called
         by PaymentService, not directly by routers.
         """
-        order = self.get_order(order_id)
+        order = self._get_order_or_raise(order_id)
 
         if not can_modify_order(order):
             raise BusinessRuleError(
@@ -216,13 +213,17 @@ class OrderService:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _validate_items_belong_to_restaurant(
+    def _get_order_or_raise(self, order_id: str) -> Order:
+        order = self._orders.get_by_id(order_id)
+        if order is None:
+            raise NotFoundError(f"Order '{order_id}' not found.")
+        return order
+
+    def _get_restaurant_items(
         self, food_item_ids: List[str], restaurant_id: str
-    ) -> None:
-        """
-        Raise BusinessRuleError if any item does not exist or belongs to
-        a different restaurant.
-        """
+    ) -> List[MenuItem]:
+        """Load items once, ensuring they exist and belong to the restaurant."""
+        items: List[MenuItem] = []
         for item_id in food_item_ids:
             item = self._menu.get_by_id(item_id)
             if item is None:
@@ -231,13 +232,14 @@ class OrderService:
                 raise BusinessRuleError(
                     f"Item '{item_id}' does not belong to restaurant '{restaurant_id}'."
                 )
+            items.append(item)
+        return items
 
-    def _calculate_order_value(self, food_item_ids: List[str]) -> float:
-        """Sum the prices of all items in the order."""
+    def _calculate_order_value(self, items: List[MenuItem]) -> float:
+        """Sum the prices of validated items in the order."""
         total = 0.0
-        for item_id in food_item_ids:
-            item = self._menu.get_by_id(item_id)
-            if item and item.price is not None:
+        for item in items:
+            if item.price is not None:
                 total += item.price
         return round(total, 2)
 
