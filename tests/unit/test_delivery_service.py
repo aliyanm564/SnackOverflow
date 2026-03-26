@@ -55,7 +55,7 @@ def test_update_delivery_as_customer_fails(mock_delivery_repo, mock_order_repo, 
     service = DeliveryService(mock_delivery_repo, mock_order_repo)
  
     with pytest.raises(AuthorizationError):
-        service.update_delivery(customer_user, "order-001", traffic_condition="High") 
+         service.update_delivery(customer_user, "order-001", {"traffic_condition": "High"})
  
 def test_negative_delay_threshold(mock_delivery_repo, mock_order_repo):
     service = DeliveryService(mock_delivery_repo, mock_order_repo)
