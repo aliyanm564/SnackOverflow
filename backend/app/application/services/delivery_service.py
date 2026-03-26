@@ -34,8 +34,7 @@ class DeliveryService:
         estimated_delivery_time: Optional[datetime] = None,
     ) -> Delivery:
       
-        if requesting_user.role == UserRole.CUSTOMER:
-            raise AuthorizationError("Customers cannot assign deliveries.")
+        self._check_not_customer(requesting_user)
 
         order = self._orders.get_by_id(order_id)
         if order is None:
@@ -79,8 +78,7 @@ class DeliveryService:
         predicted_delivery_mode: Optional[str] = None,
         traffic_avoidance: Optional[bool] = None,
     ) -> Delivery:
-        if requesting_user.role == UserRole.CUSTOMER:
-            raise AuthorizationError("Customers cannot update deliveries.")
+        self._check_not_customer(requesting_user)
 
         delivery = self.get_delivery(order_id)
 
@@ -108,6 +106,10 @@ class DeliveryService:
 
         updated_delivery = delivery.model_copy(update=updates)
         return self._deliveries.save(updated_delivery)
+    
+    def _check_not_customer(self, user: User) -> None:
+        if user.role == UserRole.CUSTOMER:
+            raise AuthorizationError("Customers cannot perform this action.")
 
     def get_by_method(self, method: DeliveryMethod) -> List[Delivery]:
         return self._deliveries.get_by_delivery_method(method)
@@ -125,3 +127,5 @@ class DeliveryService:
 
     def get_by_weather(self, condition: str) -> List[Delivery]:
         return self._deliveries.get_by_weather_condition(condition)
+    
+    
