@@ -66,3 +66,81 @@ def test_invalid_order_status_raises_error():
             items=["food_5"],
             status="invalid_status"
         )
+
+
+def test_order_requires_at_least_one_item():
+    with pytest.raises(ValueError):
+        Order(
+            order_id="o5",
+            customer_id="c5",
+            restaurant_id="r5",
+            items=[],
+        )
+
+
+def test_order_rejects_blank_item_ids():
+    with pytest.raises(ValueError):
+        Order(
+            order_id="o6",
+            customer_id="c6",
+            restaurant_id="r6",
+            items=["food_1", "   "],
+        )
+
+
+def test_order_rejects_negative_order_value():
+    with pytest.raises(ValueError):
+        Order(
+            order_id="o7",
+            customer_id="c7",
+            restaurant_id="r7",
+            items=["food_1"],
+            order_value=-1.0,
+        )
+
+
+def test_order_rejects_rating_out_of_range():
+    with pytest.raises(ValueError):
+        Order(
+            order_id="o8",
+            customer_id="c8",
+            restaurant_id="r8",
+            items=["food_1"],
+            customer_rating=5.5,
+        )
+
+
+def test_order_rejects_satisfaction_out_of_range():
+    with pytest.raises(ValueError):
+        Order(
+            order_id="o9",
+            customer_id="c9",
+            restaurant_id="r9",
+            items=["food_1"],
+            customer_satisfaction=0,
+        )
+
+
+def test_pending_order_can_be_cancelled_and_completed():
+    order = Order(
+        order_id="o10",
+        customer_id="c10",
+        restaurant_id="r10",
+        items=["food_1"],
+    )
+
+    assert order.can_be_cancelled() is True
+    assert order.can_be_completed() is True
+
+
+def test_non_pending_order_cannot_be_cancelled_or_completed():
+    order = Order(
+        order_id="o11",
+        customer_id="c11",
+        restaurant_id="r11",
+        items=["food_1"],
+        status=OrderStatus.COMPLETED,
+    )
+
+    assert order.can_be_cancelled() is False
+    assert order.can_be_completed() is False
