@@ -79,15 +79,6 @@ def update_delivery(
     updated = svc.update_delivery(
         requesting_user=current_user,
         order_id=order_id,
-        delivery_time_actual=body.delivery_time_actual,
-        delivery_delay=body.delivery_delay,
-        delivery_method=body.delivery_method,
-        route_taken=body.route_taken,
-        route_type=body.route_type,
-        route_efficiency=body.route_efficiency,
-        traffic_condition=body.traffic_condition,
-        weather_condition=body.weather_condition,
-        predicted_delivery_mode=body.predicted_delivery_mode,
-        traffic_avoidance=body.traffic_avoidance,
+        updates=body.model_dump(exclude_none=True),
     )
     return _to_response(updated)
