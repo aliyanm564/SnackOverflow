@@ -13,8 +13,8 @@ def calculate_delivery_fee(order: Order, base_fee: float = 5.0) -> float:
    return base_fee + 1.0 * getattr(order, "delivery_distance", 0)
 
 
-def calculate_total(order: Order, item_prices: dict, tax_rate: float = 0.13) -> float:
+def calculate_total(order: Order, item_prices: dict, tax_rate: float = 0.13, base_fee: float = 5.0) -> float:
    subtotal = calculate_subtotal(order, item_prices)
-   delivery_fee = calculate_delivery_fee(order)
+   delivery_fee = calculate_delivery_fee(order, base_fee)
    taxes = subtotal * tax_rate
    return subtotal + delivery_fee + taxes

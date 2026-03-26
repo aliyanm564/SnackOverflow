@@ -84,8 +84,9 @@ class PricingService:
         if customer.loyalty_program:
             loyalty_discount = round(subtotal * self.LOYALTY_DISCOUNT_RATE, 2)
 
+        base_total = calculate_total(order, item_prices, self._tax_rate)
         grand_total = round(
-            subtotal + delivery_fee + taxes - loyalty_discount, 2
+            base_total - loyalty_discount, 2
         )
 
         return PriceBreakdown(
