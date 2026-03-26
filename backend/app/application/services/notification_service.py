@@ -4,7 +4,10 @@ from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.domain.models.notification import Notification
 from backend.app.domain.models.user import User
 from backend.app.domain.models.user import UserRole
-from backend.app.infrastructure.repositories.notification_repository import NotificationRepository
+from backend.app.infrastructure.repositories.notification_repository import (
+    Notification,
+    NotificationRepository,
+)
 
 class NotificationService:
 
