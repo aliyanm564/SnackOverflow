@@ -35,20 +35,12 @@ class PaymentService:
         self._processor = payment_processor or _default_simulated_processor
         self._notifications = notification_service
 
+
     def process_payment(self, order_id: str, customer) -> PaymentResult:
-        order = self._orders.get_by_id(order_id)
-        if order is None:
-            raise NotFoundError(f"Order '{order_id}' not found.")
+        order = self.get_valid_order(order_id)
+        self.validate_customer(order, customer)
 
-        if order.status != OrderStatus.PENDING:
-            raise BusinessRuleError(
-                f"Cannot charge for order '{order_id}': status is {order.status.value}."
-            )
-
-        if order.customer_id != customer.customer_id:
-            from backend.app.application.exceptions import AuthorizationError
-            raise AuthorizationError("You can only pay for your own orders.")
-
+        
         breakdown = self._pricing.get_price_breakdown(order_id, customer)
         amount = breakdown.grand_total
 
@@ -77,6 +69,22 @@ class PaymentService:
             status="approved",
             message=f"Payment of ${amount:.2f} approved. Order is now complete.",
         )
+    
+
+    def get_valid_order(self,order_id: str):
+        order = self._orders.get_by_id(order_id)
+        if order is None:
+            raise NotFoundError(f"Order '{order_id}' not found.")
+        if order.status != OrderStatus.PENDING:
+            raise BusinessRuleError(
+                f"Cannot charge for order '{order_id}': status is {order.status.value}."
+            )
+        return order
+    
+    def validate_customer(self, order, customer):
+        if order.customer_id != customer.customer_id:
+            from backend.app.application.exceptions import AuthorizationError
+            raise AuthorizationError("You can only pay for your own orders.")
 
     def _notify(self, user_id: str, event_type: str, message: str) -> None:
         if self._notifications is not None:
