@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+from backend.app.domain.models.notification import Notification
 from backend.app.infrastructure.repositories.notification_repository import (
-    Notification,
     NotificationRepository,
 )
 
@@ -12,7 +12,7 @@ def test_save_and_get_by_id(db_session):
 
     saved = repo.save(
         Notification(
-            notification_id=0,
+            notification_id=None,
             user_id="user-1",
             event_type="order_created",
             message="Order created",
@@ -53,10 +53,24 @@ def test_get_by_user_returns_newest_first(db_session):
     newer = datetime.now(timezone.utc)
 
     repo.save(
-        Notification(0, "user-1", "order_created", "Older", older, False)
+        Notification(
+            notification_id=None,
+            user_id="user-1",
+            event_type="order_created",
+            message="Older",
+            created_at=older,
+            is_read=False,
+        )
     )
     repo.save(
-        Notification(0, "user-1", "order_completed", "Newer", newer, False)
+        Notification(
+            notification_id=None,
+            user_id="user-1",
+            event_type="order_completed",
+            message="Newer",
+            created_at=newer,
+            is_read=False,
+        )
     )
     repo.create_notification("user-2", "payment_received", "Other user")
 

@@ -2,11 +2,14 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.application.services.menu_service import MenuService
 from backend.app.domain.models.menu_item import MenuItem
 from backend.app.domain.models.user import User
-from backend.app.presentation.dependencies import get_current_user, get_menu_service
+from backend.app.presentation.dependencies import (
+    get_current_user,
+    get_menu_service,
+    handle_app_errors,
+)
 from backend.app.presentation.schemas import (
     CreateMenuItemRequest,
     MenuItemResponse,
@@ -32,6 +35,7 @@ def _to_response(item: MenuItem) -> MenuItemResponse:
     status_code=status.HTTP_201_CREATED,
     summary="Add an item to a restaurant's menu (owner only)",
 )
+@handle_app_errors
 def add_menu_item(
     restaurant_id: str,
     body: CreateMenuItemRequest,
@@ -46,10 +50,6 @@ def add_menu_item(
             category=body.category,
             price=body.price,
         )
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return _to_response(item)
@@ -60,6 +60,7 @@ def add_menu_item(
     response_model=List[MenuItemResponse],
     summary="Get all menu items for a restaurant",
 )
+@handle_app_errors
 def get_restaurant_menu(
     restaurant_id: str,
     offset: int = Query(default=0, ge=0),
@@ -67,12 +68,9 @@ def get_restaurant_menu(
     current_user: User = Depends(get_current_user),
     menu_svc: MenuService = Depends(get_menu_service),
 ):
-    try:
-        items = menu_svc.list_items_paginated(
-            restaurant_id=restaurant_id, offset=offset, limit=limit
-        )
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    items = menu_svc.list_items_paginated(
+        restaurant_id=restaurant_id, offset=offset, limit=limit
+    )
     return [_to_response(i) for i in items]
 
 
@@ -118,15 +116,13 @@ def filter_menu_items(
     response_model=MenuItemResponse,
     summary="Get a single menu item by ID",
 )
+@handle_app_errors
 def get_menu_item(
     food_item_id: str,
     current_user: User = Depends(get_current_user),
     menu_svc: MenuService = Depends(get_menu_service),
 ):
-    try:
-        item = menu_svc.get_item(food_item_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    item = menu_svc.get_item(food_item_id)
     return _to_response(item)
 
 
@@ -135,6 +131,7 @@ def get_menu_item(
     response_model=MenuItemResponse,
     summary="Update a menu item (owner only)",
 )
+@handle_app_errors
 def update_menu_item(
     food_item_id: str,
     body: UpdateMenuItemRequest,
@@ -149,10 +146,6 @@ def update_menu_item(
             category=body.category,
             price=body.price,
         )
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return _to_response(updated)
@@ -163,14 +156,10 @@ def update_menu_item(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a menu item (owner only)",
 )
+@handle_app_errors
 def delete_menu_item(
     food_item_id: str,
     current_user: User = Depends(get_current_user),
     menu_svc: MenuService = Depends(get_menu_service),
 ):
-    try:
-        menu_svc.delete_item(current_user, food_item_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    menu_svc.delete_item(current_user, food_item_id)

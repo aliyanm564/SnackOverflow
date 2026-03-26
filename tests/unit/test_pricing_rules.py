@@ -47,7 +47,7 @@ def test_delivery_fee_with_no_order_value():
         order_id="3",
         customer_id="cust1",
         restaurant_id="rest1",
-        items=[]
+        items=["placeholder-item"]
     )
 
     fee = calculate_delivery_fee(order)
@@ -60,7 +60,7 @@ def test_delivery_fee_with_distance():
     order_id="4",
     customer_id="cust1",
     restaurant_id="rest1",
-    items=[]
+    items=["placeholder-item"]
     )
 
     orders.order_value = 20

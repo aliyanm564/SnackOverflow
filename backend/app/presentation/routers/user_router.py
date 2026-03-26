@@ -2,10 +2,13 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.application.services.user_service import UserService
 from backend.app.domain.models.user import User, UserRole
-from backend.app.presentation.dependencies import get_current_user, get_user_service
+from backend.app.presentation.dependencies import (
+    get_current_user,
+    get_user_service,
+    handle_app_errors,
+)
 from backend.app.presentation.schemas import (
     ChangeRoleRequest,
     UpdateProfileRequest,
@@ -87,6 +90,7 @@ def list_users(
     response_model=UserResponse,
     summary="Get a user by ID",
 )
+@handle_app_errors
 def get_user(
     customer_id: str,
     current_user: User = Depends(get_current_user),
@@ -100,10 +104,7 @@ def get_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only view your own profile.",
         )
-    try:
-        user = user_svc.get_user(customer_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    user = user_svc.get_user(customer_id)
     return _to_response(user)
 
 
@@ -112,6 +113,7 @@ def get_user(
     response_model=UserResponse,
     summary="Change a user's role (restaurant owners only)",
 )
+@handle_app_errors
 def change_role(
     customer_id: str,
     body: ChangeRoleRequest,
@@ -125,15 +127,7 @@ def change_role(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid role '{body.new_role}'.",
         )
-    try:
-        updated = user_svc.change_role(current_user, customer_id, new_role)
-    except (AuthorizationError, NotFoundError) as exc:
-        code = (
-            status.HTTP_403_FORBIDDEN
-            if isinstance(exc, AuthorizationError)
-            else status.HTTP_404_NOT_FOUND
-        )
-        raise HTTPException(status_code=code, detail=str(exc))
+    updated = user_svc.change_role(current_user, customer_id, new_role)
     return _to_response(updated)
 
 
@@ -142,6 +136,7 @@ def change_role(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a user account",
 )
+@handle_app_errors
 def delete_user(
     customer_id: str,
     current_user: User = Depends(get_current_user),
@@ -152,7 +147,4 @@ def delete_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only delete your own account.",
         )
-    try:
-        user_svc.delete_user(customer_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    user_svc.delete_user(customer_id)
