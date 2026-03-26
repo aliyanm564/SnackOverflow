@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from backend.app.application.exceptions import AuthenticationError, ConflictError
 from backend.app.application.services.auth_service import AuthService
 from backend.app.domain.models.user import UserRole
-from backend.app.presentation.dependencies import get_auth_service
+from backend.app.presentation.dependencies import get_auth_service, handle_app_errors
 from backend.app.presentation.schemas import (
     LoginRequest,
     RegisterRequest,
@@ -20,6 +19,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user account",
 )
+@handle_app_errors
 def register(
     body: RegisterRequest,
     auth_svc: AuthService = Depends(get_auth_service),
@@ -31,21 +31,18 @@ def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid role '{body.role}'. Must be one of: {[r.value for r in UserRole]}",
         )
-    try:
-        user = auth_svc.register(
-            email=body.email,
-            password=body.password,
-            role=role,
-            name=body.name,
-            age=body.age,
-            gender=body.gender,
-            location=body.location,
-            preferred_cuisine=body.preferred_cuisine,
-            order_frequency=body.order_frequency,
-            loyalty_program=body.loyalty_program,
-        )
-    except ConflictError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+    user = auth_svc.register(
+        email=body.email,
+        password=body.password,
+        role=role,
+        name=body.name,
+        age=body.age,
+        gender=body.gender,
+        location=body.location,
+        preferred_cuisine=body.preferred_cuisine,
+        order_frequency=body.order_frequency,
+        loyalty_program=body.loyalty_program,
+    )
 
     return UserResponse(
         customer_id=user.customer_id,
@@ -65,13 +62,11 @@ def register(
     response_model=TokenResponse,
     summary="Log in and receive a JWT access token",
 )
+@handle_app_errors
 def login(
     body: LoginRequest,
     auth_svc: AuthService = Depends(get_auth_service),
 ):
-    try:
-        token = auth_svc.login(body.email, body.password)
-    except AuthenticationError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
+    token = auth_svc.login(body.email, body.password)
 
     return TokenResponse(access_token=token)

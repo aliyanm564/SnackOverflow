@@ -1,3 +1,5 @@
+import inspect
+from functools import wraps
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -173,12 +175,33 @@ def require_role(*allowed_roles: UserRole):
 
 def app_error_to_http(exc: AppError) -> HTTPException:
     mapping = {
-        NotFoundError:       status.HTTP_404_NOT_FOUND,
-        ConflictError:       status.HTTP_409_CONFLICT,
+        NotFoundError: status.HTTP_404_NOT_FOUND,
+        ConflictError: status.HTTP_409_CONFLICT,
         AuthenticationError: status.HTTP_401_UNAUTHORIZED,
-        AuthorizationError:  status.HTTP_403_FORBIDDEN,
-        BusinessRuleError:   status.HTTP_422_UNPROCESSABLE_ENTITY,
-        PaymentError:        status.HTTP_402_PAYMENT_REQUIRED,
+        AuthorizationError: status.HTTP_403_FORBIDDEN,
+        BusinessRuleError: status.HTTP_422_UNPROCESSABLE_CONTENT,
+        PaymentError: status.HTTP_402_PAYMENT_REQUIRED,
     }
     code = mapping.get(type(exc), status.HTTP_400_BAD_REQUEST)
     return HTTPException(status_code=code, detail=str(exc))
+
+
+def handle_app_errors(func):
+    if inspect.iscoroutinefunction(func):
+        @wraps(func)
+        async def _async_wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except AppError as exc:
+                raise app_error_to_http(exc) from exc
+
+        return _async_wrapper
+
+    @wraps(func)
+    def _sync_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except AppError as exc:
+            raise app_error_to_http(exc) from exc
+
+    return _sync_wrapper
