@@ -70,7 +70,7 @@ class RestaurantRepository(BaseRepository[Restaurant, str]):
             owner_id=orm_obj.owner_id,
             name=orm_obj.name,
             location=orm_obj.location,
-            cuisine_type=orm_obj.description,
+            description=orm_obj.description,
         )
     
     @staticmethod
