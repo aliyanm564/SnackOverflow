@@ -47,12 +47,16 @@ class RestaurantService:
         restaurant = self.get_restaurant(restaurant_id)
         self._check_owner(requesting_user, restaurant)
 
+        changes = {}
         if name is not None:
-            restaurant = restaurant.model_copy(update={"name": name})
+            changes["name"] = name
         if location is not None:
-            restaurant = restaurant.model_copy(update={"location": location})
+            changes["location"] = location
         if description is not None:
-            restaurant = restaurant.model_copy(update={"description": description})
+            changes["description"] = description
+        
+        if changes:
+            restaurant = restaurant.model_copy(update=changes)
         
         return self._restaurants.save(restaurant)
     

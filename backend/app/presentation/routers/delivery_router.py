@@ -1,15 +1,14 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
-from backend.app.application.exceptions import (
-    AuthorizationError,
-    BusinessRuleError,
-    NotFoundError,
-)
 from backend.app.application.services.delivery_service import DeliveryService
 from backend.app.domain.models.user import User
-from backend.app.presentation.dependencies import get_current_user, get_delivery_service
+from backend.app.presentation.dependencies import (
+    get_current_user,
+    get_delivery_service,
+    handle_app_errors,
+)
 from backend.app.presentation.schemas import (
     AssignDeliveryRequest,
     UpdateDeliveryRequest,
@@ -36,37 +35,29 @@ def _to_response(delivery) -> DeliveryResponse:
     )
 
 @router.post("/{order_id}", response_model=DeliveryResponse, status_code=status.HTTP_201_CREATED)
+@handle_app_errors
 def assign_delivery(
     order_id: str,
     body: AssignDeliveryRequest,
     current_user: User = Depends(get_current_user),
     svc: DeliveryService = Depends(get_delivery_service),
 ):
-    try:
-        delivery = svc.assign_delivery(
-            requesting_user=current_user,
-            order_id=order_id,
-            delivery_method=body.delivery_method,
-            delivery_distance=body.delivery_distance,
-            estimated_delivery_time=body.estimated_delivery_time,
-        )
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except BusinessRuleError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc))
+    delivery = svc.assign_delivery(
+        requesting_user=current_user,
+        order_id=order_id,
+        delivery_method=body.delivery_method,
+        delivery_distance=body.delivery_distance,
+        estimated_delivery_time=body.estimated_delivery_time,
+    )
     return _to_response(delivery)
 
 @router.get("/{order_id}", response_model=DeliveryResponse)
+@handle_app_errors
 def get_delivery(
     order_id: str,
     svc: DeliveryService = Depends(get_delivery_service),
 ):
-    try:
-        delivery = svc.get_delivery(order_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    delivery = svc.get_delivery(order_id)
     return _to_response(delivery)
 
 @router.get("", response_model=List[DeliveryResponse])
@@ -78,29 +69,16 @@ def list_deliveries(
     return [_to_response(d) for d in svc.list_deliveries(offset=offset, limit=limit)]
 
 @router.patch("/{order_id}", response_model=DeliveryResponse)
+@handle_app_errors
 def update_delivery(
     order_id: str,
     body: UpdateDeliveryRequest,
     current_user: User = Depends(get_current_user),
     svc: DeliveryService = Depends(get_delivery_service),
 ):
-    try:
-        updated = svc.update_delivery(
-            requesting_user=current_user,
-            order_id=order_id,
-            delivery_time_actual=body.delivery_time_actual,
-            delivery_delay=body.delivery_delay,
-            delivery_method=body.delivery_method,
-            route_taken=body.route_taken,
-            route_type=body.route_type,
-            route_efficiency=body.route_efficiency,
-            traffic_condition=body.traffic_condition,
-            weather_condition=body.weather_condition,
-            predicted_delivery_mode=body.predicted_delivery_mode,
-            traffic_avoidance=body.traffic_avoidance,
-        )
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    updated = svc.update_delivery(
+        requesting_user=current_user,
+        order_id=order_id,
+        updates=body.model_dump(exclude_none=True),
+    )
     return _to_response(updated)

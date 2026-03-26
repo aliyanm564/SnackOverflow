@@ -1,17 +1,22 @@
-from typing import List, Optional 
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.application.services.restaurant_service import RestaurantService
-from backend.app.domain.models.user import User 
-from backend.app.presentation.dependencies import get_current_user, get_restaurant_service
-from backend.app.presentation.schemas import(
-    CreateRestaurantRequest,
-    UpdateRestaurantRequest,
-    RestaurantResponse,
+from backend.app.domain.models.user import User
+from backend.app.presentation.dependencies import (
+    get_current_user,
+    get_restaurant_service,
+    handle_app_errors,
 )
-router = APIRouter(prefix ="/restaurants", tags=["Restaurants"])
+from backend.app.presentation.schemas import (
+    CreateRestaurantRequest,
+    RestaurantResponse,
+    UpdateRestaurantRequest,
+)
+
+router = APIRouter(prefix="/restaurants", tags=["Restaurants"])
+
 
 def _to_response(restaurant) -> RestaurantResponse:
     return RestaurantResponse(
@@ -20,39 +25,34 @@ def _to_response(restaurant) -> RestaurantResponse:
         name=restaurant.name,
         location=restaurant.location,
         description=restaurant.description,
-
     )
 
+
 @router.post("", response_model=RestaurantResponse, status_code=status.HTTP_201_CREATED)
+@handle_app_errors
 def create_restaurant(
     body: CreateRestaurantRequest,
     current_user: User = Depends(get_current_user),
-    svc: RestaurantService = Depends(get_restaurant_service)
-
+    svc: RestaurantService = Depends(get_restaurant_service),
 ):
-    try:
-        restaurant = svc.create_restaurant(
-            requesting_user = current_user, 
-            name = body.name,
-            location = body.location, 
-            description = body.description,
-        )
-
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail =str(exc))
+    restaurant = svc.create_restaurant(
+        requesting_user=current_user,
+        name=body.name,
+        location=body.location,
+        description=body.description,
+    )
     return _to_response(restaurant)
+
 
 @router.get("/{restaurant_id}", response_model=RestaurantResponse)
+@handle_app_errors
 def get_restaurant(
-    restaurant_id: str, 
-    svc: RestaurantService = Depends(get_restaurant_service)
-
+    restaurant_id: str,
+    svc: RestaurantService = Depends(get_restaurant_service),
 ):
-    try: 
-        restaurant = svc.get_restaurant(restaurant_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = str(exc))
+    restaurant = svc.get_restaurant(restaurant_id)
     return _to_response(restaurant)
+
 
 @router.get("", response_model=List[RestaurantResponse])
 def list_restaurants(
@@ -68,6 +68,7 @@ def list_restaurants(
         restaurants = svc.list_restaurants(location=location, offset=offset, limit=limit)
     return [_to_response(r) for r in restaurants]
 
+
 @router.get("/owner/{owner_id}", response_model=List[RestaurantResponse])
 def get_owner_restaurants(
     owner_id: str,
@@ -75,36 +76,30 @@ def get_owner_restaurants(
 ):
     return [_to_response(r) for r in svc.get_owner_restaurants(owner_id)]
 
+
 @router.patch("/{restaurant_id}", response_model=RestaurantResponse)
+@handle_app_errors
 def update_restaurant(
     restaurant_id: str,
     body: UpdateRestaurantRequest,
     current_user: User = Depends(get_current_user),
     svc: RestaurantService = Depends(get_restaurant_service),
 ):
-    try:
-        updated = svc.update_restaurant(
-            requesting_user=current_user,
-            restaurant_id=restaurant_id,
-            name=body.name,
-            location=body.location,
-            description=body.description,
-        )
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    updated = svc.update_restaurant(
+        requesting_user=current_user,
+        restaurant_id=restaurant_id,
+        name=body.name,
+        location=body.location,
+        description=body.description,
+    )
     return _to_response(updated)
 
+
 @router.delete("/{restaurant_id}", status_code=status.HTTP_204_NO_CONTENT)
+@handle_app_errors
 def delete_restaurant(
     restaurant_id: str,
     current_user: User = Depends(get_current_user),
     svc: RestaurantService = Depends(get_restaurant_service),
 ):
-    try:
-        svc.delete_restaurant(requesting_user=current_user, restaurant_id=restaurant_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    svc.delete_restaurant(requesting_user=current_user, restaurant_id=restaurant_id)

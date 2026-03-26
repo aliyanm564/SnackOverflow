@@ -2,16 +2,15 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.app.application.exceptions import (
-    AuthorizationError,
-    BusinessRuleError,
-    NotFoundError,
-)
 from backend.app.application.services.order_service import OrderService
 from backend.app.domain.models.enums import OrderStatus
 from backend.app.domain.models.orders import Order
 from backend.app.domain.models.user import User, UserRole
-from backend.app.presentation.dependencies import get_current_user, get_order_service
+from backend.app.presentation.dependencies import (
+    get_current_user,
+    get_order_service,
+    handle_app_errors,
+)
 from backend.app.presentation.schemas import OrderResponse, PlaceOrderRequest
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -37,26 +36,17 @@ def _to_response(order: Order) -> OrderResponse:
     status_code=status.HTTP_201_CREATED,
     summary="Place a new order (customers only)",
 )
+@handle_app_errors
 def place_order(
     body: PlaceOrderRequest,
     current_user: User = Depends(get_current_user),
     order_svc: OrderService = Depends(get_order_service),
 ):
-    try:
-        order = order_svc.place_order(
-            requesting_user=current_user,
-            restaurant_id=body.restaurant_id,
-            food_item_ids=body.food_item_ids,
-        )
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except BusinessRuleError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        )
+    order = order_svc.place_order(
+        requesting_user=current_user,
+        restaurant_id=body.restaurant_id,
+        food_item_ids=body.food_item_ids,
+    )
     return _to_response(order)
 
 
@@ -100,15 +90,13 @@ def list_my_orders(
     response_model=List[OrderResponse],
     summary="Get all orders for a restaurant (owners only)",
 )
+@handle_app_errors
 def get_restaurant_orders(
     restaurant_id: str,
     current_user: User = Depends(get_current_user),
     order_svc: OrderService = Depends(get_order_service),
 ):
-    try:
-        orders = order_svc.get_orders_for_restaurant(current_user, restaurant_id)
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    orders = order_svc.get_orders_for_restaurant(current_user, restaurant_id)
     return [_to_response(o) for o in orders]
 
 
@@ -117,15 +105,13 @@ def get_restaurant_orders(
     response_model=OrderResponse,
     summary="Get a single order by ID",
 )
+@handle_app_errors
 def get_order(
     order_id: str,
     current_user: User = Depends(get_current_user),
     order_svc: OrderService = Depends(get_order_service),
 ):
-    try:
-        order = order_svc.get_order(order_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    order = order_svc.get_order(order_id)
 
     if (
         current_user.role == UserRole.CUSTOMER
@@ -144,20 +130,11 @@ def get_order(
     response_model=OrderResponse,
     summary="Cancel a pending order",
 )
+@handle_app_errors
 def cancel_order(
     order_id: str,
     current_user: User = Depends(get_current_user),
     order_svc: OrderService = Depends(get_order_service),
 ):
-    try:
-        order = order_svc.cancel_order(current_user, order_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
-    except BusinessRuleError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        )
+    order = order_svc.cancel_order(current_user, order_id)
     return _to_response(order)

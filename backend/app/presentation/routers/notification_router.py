@@ -1,20 +1,21 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
-from backend.app.application.exceptions import AuthorizationError, NotFoundError
 from backend.app.application.services.notification_service import NotificationService
+from backend.app.domain.models.notification import Notification
 from backend.app.domain.models.user import User
 from backend.app.presentation.dependencies import (
     get_current_user,
     get_notification_service,
+    handle_app_errors,
 )
 from backend.app.presentation.schemas import NotificationResponse
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
 
-def _to_response(notification) -> NotificationResponse:
+def _to_response(notification: Notification) -> NotificationResponse:
     return NotificationResponse(
         notification_id=notification.notification_id,
         user_id=notification.user_id,
@@ -30,16 +31,14 @@ def _to_response(notification) -> NotificationResponse:
     response_model=List[NotificationResponse],
     summary="Get all notifications for the current user",
 )
+@handle_app_errors
 def get_my_notifications(
     current_user: User = Depends(get_current_user),
     notification_svc: NotificationService = Depends(get_notification_service),
 ):
-    try:
-        notifications = notification_svc.get_all_for_user(
-            current_user, current_user.customer_id
-        )
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    notifications = notification_svc.get_all_for_user(
+        current_user, current_user.customer_id
+    )
     return [_to_response(notification) for notification in notifications]
 
 
@@ -48,16 +47,14 @@ def get_my_notifications(
     response_model=List[NotificationResponse],
     summary="Get unread notifications for the current user",
 )
+@handle_app_errors
 def get_unread_notifications(
     current_user: User = Depends(get_current_user),
     notification_svc: NotificationService = Depends(get_notification_service),
 ):
-    try:
-        notifications = notification_svc.get_unread_for_user(
-            current_user, current_user.customer_id
-        )
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    notifications = notification_svc.get_unread_for_user(
+        current_user, current_user.customer_id
+    )
     return [_to_response(notification) for notification in notifications]
 
 
@@ -66,17 +63,13 @@ def get_unread_notifications(
     response_model=NotificationResponse,
     summary="Mark a single notification as read",
 )
+@handle_app_errors
 def mark_notification_read(
     notification_id: int,
     current_user: User = Depends(get_current_user),
     notification_svc: NotificationService = Depends(get_notification_service),
 ):
-    try:
-        updated = notification_svc.mark_read(current_user, notification_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    updated = notification_svc.mark_read(current_user, notification_id)
     return _to_response(updated)
 
 
@@ -84,14 +77,12 @@ def mark_notification_read(
     "/read-all",
     summary="Mark all notifications as read for the current user",
 )
+@handle_app_errors
 def mark_all_read(
     current_user: User = Depends(get_current_user),
     notification_svc: NotificationService = Depends(get_notification_service),
 ):
-    try:
-        count = notification_svc.mark_all_read(current_user, current_user.customer_id)
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    count = notification_svc.mark_all_read(current_user, current_user.customer_id)
     return {"marked_read": count}
 
 
@@ -100,14 +91,10 @@ def mark_all_read(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a notification",
 )
+@handle_app_errors
 def delete_notification(
     notification_id: int,
     current_user: User = Depends(get_current_user),
     notification_svc: NotificationService = Depends(get_notification_service),
 ):
-    try:
-        notification_svc.delete_notification(current_user, notification_id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except AuthorizationError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    notification_svc.delete_notification(current_user, notification_id)

@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 from backend.app.application.exceptions import AuthorizationError, NotFoundError
-from backend.app.infrastructure.repositories.notification_repository import Notification
+from backend.app.domain.models.notification import Notification
 from backend.app.presentation.dependencies import get_notification_service
 
 
