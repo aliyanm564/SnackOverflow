@@ -1,28 +1,4 @@
-"""
-exceptions.py
--------------
-Application-layer exception hierarchy.
-
-Services raise these typed exceptions instead of generic ValueError or
-HTTPException so that:
-  * The domain layer stays framework-agnostic.
-  * Presentation-layer routers translate them into the correct HTTP status
-    codes in one place (see dependencies.py / exception handlers in main.py).
-
-Hierarchy
----------
-AppError                   (base – never raised directly)
-├── NotFoundError          → 404
-├── ConflictError          → 409  (duplicate resource)
-├── AuthenticationError    → 401  (bad credentials)
-├── AuthorizationError     → 403  (insufficient role)
-├── BusinessRuleError      → 422  (domain rule violated)
-└── PaymentError           → 402  (simulated payment failure)
-"""
-
-
 class AppError(Exception):
-    """Base class for all application-layer errors."""
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
@@ -53,4 +29,4 @@ class BusinessRuleError(AppError):
 
 
 class PaymentError(AppError):
-    """Raised when a simulated payment is rejected."""
+    """Raised when a payment is declined or fails to process."""

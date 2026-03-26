@@ -80,7 +80,7 @@ def test_get_by_email_and_password_helpers(db_session):
     repository = UserRepository(db_session)
     repository.save(User(customer_id="user_1", name="Auth User"))
 
-    orm_user = repository._db.get(UserORM, "user_1")  # noqa: SLF001 - test setup for persistence-only fields
+    orm_user = repository._db.get(UserORM, "user_1")
     orm_user.email = "user@example.com"
     db_session.flush()
 

@@ -2,10 +2,6 @@ import pytest
 from backend.app.domain.models.enums import OrderStatus, DeliveryMethod, RouteType
 
 
-# -----------------------------
-# OrderStatus Tests
-# -----------------------------
-
 def test_order_status_values():
     assert OrderStatus.PENDING.value == "pending"
     assert OrderStatus.COMPLETED.value == "completed"
@@ -21,10 +17,6 @@ def test_invalid_order_status():
     with pytest.raises(ValueError):
         OrderStatus("invalid_status")
 
-
-# -----------------------------
-# DeliveryMethod Tests
-# -----------------------------
 
 def test_delivery_method_values():
     assert DeliveryMethod.WALK.value == "walk"
@@ -42,10 +34,6 @@ def test_invalid_delivery_method():
     with pytest.raises(ValueError):
         DeliveryMethod("plane")
 
-
-# -----------------------------
-# RouteType Tests
-# -----------------------------
 
 def test_route_type_values():
     assert RouteType.ROUTE_1.value == "route_1"

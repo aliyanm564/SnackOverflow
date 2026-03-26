@@ -1,0 +1,73 @@
+Date: 03-14-2026
+Type of Meeting: Sprint #3
+Attendees: Aman Ullah Waseem, Muhammad Aliyan, Temi Faji, Sukhnoor Sekhon
+
+Key Discussion Points:
+- Finished the application layer, including all service classes for core features.
+- Made sure all services correctly follow business rules and connect properly with repositories.
+- Started working on the presentation layer, including building API routers for each feature.
+- Set up basic structure for request/response handling using schemas and dependencies.
+- Began work on main.py, including setting up the FastAPI app and preparing to register routers.
+- Ensured all layers (domain, application, infrastructure) are properly connected before moving forward.
+
+Action Items & Responsibilities:
+Muhammad Aliyan
+Application Layer:
+- exceptions.py
+- auth_service.py
+- user_service.py
+- payment_service.py
+Presentation Layer:
+- auth_router.py
+- user_router.py
+- schemas.py
+- dependencies.py
+Core Setup:
+- main.py
+Responsibilities:
+- Continue building and connecting routers in the presentation layer.
+- Finish setting up main.py and include all routers.
+- Add tests for auth, user, and payment features.
+
+Sukhnoor Sekhon
+Application Layer:
+- restaurant_service.py
+- delivery_service.py
+Presentation Layer:
+- restaurant_router.py
+- delivery_router.py
+Responsibilities:
+- Continue implementing restaurant and delivery routers.
+- Make sure endpoints correctly use service logic.
+- Add tests for restaurant and delivery features.
+
+Aman Ullah Waseem
+Application Layer:
+- order_service.py
+- notification_service.py
+Presentation Layer:
+- order_router.py
+- notification_router.py
+Responsibilities:
+- Build and refine order and notification routers.
+- Ensure order rules are properly applied.
+- Add tests for order and notification features.
+
+Temi Faji
+Application Layer:
+- menu_service.py
+- pricing_service.py
+Presentation Layer:
+- menu_router.py
+- payment_router.py
+Responsibilities:
+- Work on menu and payment routers.
+- Ensure pricing logic (taxes, fees) is correctly used.
+- Add tests for pricing and payment features.
+
+All Members
+- Continue building the presentation layer.
+- Keep API structure consistent across all routers.
+- Push code regularly and review pull requests.
+- Start testing full workflows across layers.
+- Make sure everything follows the project structure and clean architecture.

@@ -1,16 +1,3 @@
-"""
-----------------------------
-Tests for AuthService using a mocked UserRepository.
-No database, no real password hashing overhead beyond passlib itself.
-
-Methodologies demonstrated
----------------------------
-* Mocking         – UserRepository replaced with MagicMock
-* Exception handling – ConflictError on duplicate email, AuthenticationError
-                       on bad credentials and invalid token
-* Equivalence partitioning – valid vs invalid password, valid vs expired token
-"""
-
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -19,17 +6,9 @@ from backend.app.application.exceptions import AuthenticationError, ConflictErro
 from backend.app.domain.models.user import User, UserRole
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def make_service(user_repo):
     return AuthService(user_repository=user_repo)
 
-
-# ---------------------------------------------------------------------------
-# Registration
-# ---------------------------------------------------------------------------
 
 class TestRegister:
 
@@ -87,10 +66,6 @@ class TestVerifyToken:
     def test_verify_valid_token_returns_customer_id_and_role(
         self, mock_user_repo, customer_user
     ):
-        """
-        Token round-trip: create via _create_token directly (no password
-        hashing needed), then verify it.
-        """
         service = make_service(mock_user_repo)
         token = service._create_token(customer_user.customer_id, UserRole.CUSTOMER)
         cid, role = service.verify_token(token)

@@ -1,0 +1,38 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: snackoverflow_backend
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
+
+      DATABASE_URL: sqlite:////app/db/snackoverflow.db
+
+      CSV_PATH: /app/data/food_delivery.csv
+
+      APP_ENV: ${APP_ENV:-development}
+
+    volumes:
+      - db_data:/app/db
+      - ./backend/data/food_delivery.csv:/app/data/food_delivery.csv:ro
+
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+volumes:
+  db_data:

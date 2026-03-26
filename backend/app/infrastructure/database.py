@@ -18,15 +18,10 @@ from backend.app.infrastructure.orm_models import (
     UserORM,
 )
 
-# ---------------------------------------------------------------------------
-# Engine & session factory
-# ---------------------------------------------------------------------------
-
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./snackoverflow.db")
 
 engine = create_engine(
     DATABASE_URL,
-    # Required for SQLite to work across threads in FastAPI
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
     echo=False,
 )
@@ -35,20 +30,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db() -> None:
-    """Create all tables (no-op if they already exist)."""
     Base.metadata.create_all(bind=engine)
 
 
 @contextmanager
 def get_db() -> Generator[Session, None, None]:
-    """
-    Context-manager that yields a SQLAlchemy session and guarantees
-    commit-on-success / rollback-on-error behaviour.
-
-    Usage (in repositories / services):
-        with get_db() as db:
-            db.add(some_orm_object)
-    """
     db: Session = SessionLocal()
     try:
         yield db
@@ -58,14 +44,8 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         db.close()
-
-
-# ---------------------------------------------------------------------------
-# FastAPI dependency (used by routers via Depends)
-# ---------------------------------------------------------------------------
 
 def get_db_session() -> Generator[Session, None, None]:
-    """Yield a session for FastAPI Depends injection."""
     db: Session = SessionLocal()
     try:
         yield db
@@ -76,12 +56,6 @@ def get_db_session() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-
-# ---------------------------------------------------------------------------
-# CSV seeding helpers
-# ---------------------------------------------------------------------------
-
-# Maps the food item name to a rough cuisine category derived from the dataset.
 _ITEM_CATEGORY: dict[str, str] = {
     "Taccos": "Mexican",
     "Burritos": "Mexican",
@@ -106,7 +80,6 @@ _ITEM_CATEGORY: dict[str, str] = {
     "Soup": "Comfort",
 }
 
-# Approximate per-item prices inferred from dataset order_value ranges.
 _ITEM_PRICE: dict[str, float] = {
     "Taccos": 12.99,
     "Burritos": 13.99,
@@ -137,28 +110,11 @@ def _parse_bool(value: str) -> bool:
 
 
 def _stable_menu_item_id(restaurant_id: str, food_item: str) -> str:
-    """
-    Deterministic food_item_id so repeated seeding won't create duplicates.
-    Uses a short hex digest of restaurant + item name.
-    """
     raw = f"{restaurant_id}::{food_item}"
     return hashlib.md5(raw.encode()).hexdigest()[:12]
 
 
 def seed_from_csv(csv_path: str, session: Optional[Session] = None) -> None:
-    """
-    Reads food_delivery.csv and populates the database.
-
-    Strategy (idempotent):
-      * Users    – keyed on customer_id
-      * Restaurants – keyed on restaurant_id (numeric string)
-      * MenuItems   – keyed on (restaurant_id, food_item)
-      * Orders      – keyed on order_id
-      * Deliveries  – keyed on order_id (one delivery per order)
-
-    Rows whose primary key already exists are silently skipped so this
-    function is safe to call on every application startup.
-    """
     def _run(db: Session) -> None:
         existing_users = {u for (u,) in db.query(UserORM.customer_id)}
         existing_restaurants = {r for (r,) in db.query(RestaurantORM.restaurant_id)}
@@ -207,7 +163,6 @@ def _seed_restaurant(db: Session, row: dict, seen: set) -> None:
     seen.add(rid)
     db.add(RestaurantORM(
         restaurant_id=rid,
-        # No owner yet – will be assigned when restaurant owners register.
         owner_id=None,
         name=f"Restaurant {rid}",
         location=row["location"] or None,
@@ -255,7 +210,7 @@ def _seed_order(db: Session, row: dict, seen: set) -> None:
         order_id=oid,
         customer_id=row["customer_id"].strip(),
         restaurant_id=rid,
-        items=item_id,          # stored as comma-separated item IDs
+        items=item_id,
         order_time=order_time,
         order_value=float(row["order_value"]) if row.get("order_value") else None,
         status="completed",     # historical data is all completed
@@ -277,8 +232,6 @@ def _seed_delivery(db: Session, row: dict, seen: set) -> None:
         except ValueError:
             pass
 
-    # CSV `route_taken` holds "Route_4" style values → maps to RouteType enum.
-    # CSV `route_type` holds "Bike-friendly" / "Car-only" → stored as a plain string.
     route_taken_raw = row.get("route_taken", "").strip()
     route_type_normalised = route_taken_raw.lower().replace("-", "_") if route_taken_raw else None
 

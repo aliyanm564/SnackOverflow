@@ -2,8 +2,6 @@ import pytest
 from backend.app.domain.models.restaurant import Restaurant
 
 def test_restaurant_model_with_required_fields():
- 
- """Test creating a restaurant with only required fields"""
 
  restaurant = Restaurant(restaurant_id="123", owner_id="owner_456")
                         
@@ -14,7 +12,6 @@ def test_restaurant_model_with_required_fields():
  assert restaurant.description is None
 
 def test_restaurant_model_with_all_fields():
-    """Test creating a restaurant with all fields"""
     restaurant = Restaurant(
         restaurant_id="123",
         owner_id="owner_456",
@@ -28,7 +25,6 @@ def test_restaurant_model_with_all_fields():
     assert restaurant.description == "Best pizza and sports bar in town!"
 
 def test_two_restaurants_are_independent():
-    """Test that two restaurant instances dont share data"""
     restaurant1 = Restaurant(restaurant_id="123", owner_id="owner_456")
     restaurant2 = Restaurant(restaurant_id="222", owner_id="owner_222")
 
