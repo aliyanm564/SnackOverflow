@@ -55,7 +55,7 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         )
         return [self._to_domain(r) for r in rows]
 
-    def get_by_traffic_condition(self, condition:str) -> List[Delivery]:
+    def get_by_traffic_condition(self, condition: str) -> List[Delivery]:
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.traffic_condition == condition)
@@ -63,7 +63,7 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
         )
         return [self._to_domain(r) for r in rows]
 
-    def get_by_weather_condition(self, condition:str) -> List[Delivery]:
+    def get_by_weather_condition(self, condition: str) -> List[Delivery]:
         rows = (
             self._db.query(DeliveryORM)
             .filter(DeliveryORM.weather_condition == condition)
@@ -106,26 +106,26 @@ class DeliveryRepository(BaseRepository[Delivery, str]):
             route_taken =orm_obj.route_taken,
             route_type = route_type,
             route_efficiency=orm_obj.route_efficiency,
-                traffic_condition=orm_obj.traffic_condition,
-                weather_condition=orm_obj.weather_condition,
-                predicted_delivery_mode=orm_obj.predicted_delivery_mode,
-                traffic_avoidance=orm_obj.traffic_avoidance,
+            traffic_condition=orm_obj.traffic_condition,
+            weather_condition=orm_obj.weather_condition,
+            predicted_delivery_mode=orm_obj.predicted_delivery_mode,
+            traffic_avoidance=orm_obj.traffic_avoidance,
             )
 
     @staticmethod
     def _to_orm(domain_obj: Delivery) -> DeliveryORM:
-            return DeliveryORM(
-                order_id=domain_obj.order_id,
-                delivery_time=domain_obj.delivery_time,
-                delivery_time_actual=domain_obj.delivery_time_actual,
-                delivery_delay=domain_obj.delivery_delay,
-                delivery_distance=domain_obj.delivery_distance,
-                delivery_method=domain_obj.delivery_method.value if domain_obj.delivery_method else None,
-                route_taken=domain_obj.route_taken,
-                route_type=domain_obj.route_type.value if domain_obj.route_type else None,
-                route_efficiency=domain_obj.route_efficiency,
-                traffic_condition=domain_obj.traffic_condition,
-                weather_condition=domain_obj.weather_condition,
-                predicted_delivery_mode=domain_obj.predicted_delivery_mode,
-                traffic_avoidance=domain_obj.traffic_avoidance,
+        return DeliveryORM(
+            order_id=domain_obj.order_id,
+            delivery_time=domain_obj.delivery_time,
+            delivery_time_actual=domain_obj.delivery_time_actual,
+            delivery_delay=domain_obj.delivery_delay,
+            delivery_distance=domain_obj.delivery_distance,
+            delivery_method=domain_obj.delivery_method.value if domain_obj.delivery_method else None,
+            route_taken=domain_obj.route_taken,
+            route_type=domain_obj.route_type.value if domain_obj.route_type else None,
+            route_efficiency=domain_obj.route_efficiency,
+            traffic_condition=domain_obj.traffic_condition,
+            weather_condition=domain_obj.weather_condition,
+            predicted_delivery_mode=domain_obj.predicted_delivery_mode,
+            traffic_avoidance=domain_obj.traffic_avoidance,
             )
