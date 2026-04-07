@@ -17,6 +17,7 @@ from backend.app.infrastructure.repositories.order_repository import OrderReposi
 from backend.app.infrastructure.repositories.restaurant_repository import (
     RestaurantRepository,
 )
+from backend.app.domain.rules.orders_rules import is_menu_item_available
 
 
 class OrderService:
@@ -158,6 +159,11 @@ class OrderService:
             if item.restaurant_id != restaurant_id:
                 raise BusinessRuleError(
                     f"Item '{item_id}' does not belong to restaurant '{restaurant_id}'."
+                )
+            if not is_menu_item_available(item):
+                raise BusinessRuleError(
+                    f"Menu item '{item.name}' is not currently available."
+                    f"Menu item '{item.name}' is only available from {item.available_from} to {item.available_until}."
                 )
             items.append(item)
         return items
