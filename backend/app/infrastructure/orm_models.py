@@ -64,6 +64,9 @@ class MenuItemORM(Base):
     category = Column(String, nullable=True)
     price = Column(Float, nullable=True)
 
+    available_from = Column(Time, nullable=True)
+    available_until = Column(Time, nullable=True)
+
     restaurant = relationship("RestaurantORM", back_populates="menu_items")
 
     def __repr__(self) -> str:
