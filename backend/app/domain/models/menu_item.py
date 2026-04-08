@@ -1,3 +1,4 @@
+from datetime import time
 from typing import Optional
 from pydantic import BaseModel
 
@@ -7,3 +8,6 @@ class MenuItem(BaseModel):
     name: str
     category: Optional[str] = None
     price: Optional[float] = None
+
+    available_from: Optional[time] = None
+    available_until: Optional[time] = None

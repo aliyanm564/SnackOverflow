@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
@@ -95,6 +95,9 @@ class MenuItemResponse(BaseModel):
     name: str
     category: Optional[str]
     price: Optional[float]
+    available_from: Optional[time]
+    available_until: Optional[time]
+
 
     model_config = {"from_attributes": True}
 
