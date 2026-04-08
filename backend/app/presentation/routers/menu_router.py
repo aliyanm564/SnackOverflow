@@ -26,6 +26,8 @@ def _to_response(item: MenuItem) -> MenuItemResponse:
         name=item.name,
         category=item.category,
         price=item.price,
+        available_from=item.available_from,
+        available_until=item.available_until,
     )
 
 

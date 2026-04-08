@@ -95,8 +95,8 @@ class MenuItemResponse(BaseModel):
     name: str
     category: Optional[str]
     price: Optional[float]
-    available_from: Optional[time]
-    available_until: Optional[time]
+    available_from: Optional[time] = None
+    available_until: Optional[time] = None
 
 
     model_config = {"from_attributes": True}
