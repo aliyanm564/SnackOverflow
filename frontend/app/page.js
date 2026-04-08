@@ -1,22 +1,33 @@
-export default function Home() {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+import { apiFetch } from "@/lib/api";
+import RestaurantCard from "@/components/restaurants/RestaurantCard";
+
+async function getRestaurants() {
+  try {
+    return await apiFetch("/api/v1/restaurants?limit=50");
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+export default async function Home() {
+  const data = await getRestaurants();
 
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>SnackOverflow Frontend Running</h1>
-      <p style={{ marginTop: "0.5rem", color: "#555" }}>
-        API base: <code>{apiBase}</code>
-      </p>
-      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
-        <a href={`${apiBase}/docs`} target="_blank" rel="noreferrer"
-          style={{ padding: "0.5rem 1rem", background: "#0070f3", color: "#fff", borderRadius: "4px", textDecoration: "none" }}>
-          API Docs
-        </a>
-        <a href={`${apiBase}/health`} target="_blank" rel="noreferrer"
-          style={{ padding: "0.5rem 1rem", background: "#333", color: "#fff", borderRadius: "4px", textDecoration: "none" }}>
-          Health Check
-        </a>
-      </div>
+    <main style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1rem" }}>
+      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>SnackOverflow</h1>
+      <p style={{ color: "#555", marginBottom: "2rem" }}>Browse restaurants</p>
+
+      {data.error ? (
+        <p style={{ color: "#c00" }}>Could not load restaurants: {data.error}</p>
+      ) : data.length === 0 ? (
+        <p style={{ color: "#888" }}>No restaurants found.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {data.map((r) => (
+            <RestaurantCard key={r.restaurant_id} restaurant={r} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }
