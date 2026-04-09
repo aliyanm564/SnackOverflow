@@ -124,22 +124,63 @@ class OrderService:
         )
         return updated
 
-    def complete_order(self, order_id: str) -> Order:
+    def complete_order(self, requesting_user: User, order_id: str) -> Order:
         order = self._get_order_or_raise(order_id)
 
-        if not can_modify_order(order):
+        if requesting_user.role == UserRole.CUSTOMER:
+            raise AuthorizationError("Customers cannot mark orders as delivered.")
+
+        if order.status not in (OrderStatus.PENDING, OrderStatus.OUT_FOR_DELIVERY):
             raise BusinessRuleError(
                 f"Order '{order_id}' is already {order.status.value} and cannot be completed."
             )
 
-        mark_order_completed(order)
-        saved = self._orders.save(order)
+        saved = self._orders.update_status(order_id, OrderStatus.COMPLETED)
         self._notify(
             order.customer_id,
             "order_completed",
             f"Your order {order_id} has been completed.",
         )
         return saved
+
+    def reorder(self, requesting_user: User, order_id: str, food_item_ids: Optional[List[str]]) -> Order:
+        original = self._get_order_or_raise(order_id)
+
+        if requesting_user.role != UserRole.CUSTOMER:
+            raise AuthorizationError("Only customers can reorder.")
+
+        if original.customer_id != requesting_user.customer_id:
+            raise AuthorizationError("You can only reorder your own orders.")
+
+        items_to_use = food_item_ids if food_item_ids else original.items
+        if not items_to_use:
+            raise BusinessRuleError("An order must contain at least one item.")
+
+        items = self._get_restaurant_items(items_to_use, original.restaurant_id)
+        order_value = self._calculate_order_value(items)
+
+        new_order = Order(
+            order_id=str(uuid.uuid4()),
+            customer_id=requesting_user.customer_id,
+            restaurant_id=original.restaurant_id,
+            items=items_to_use,
+            order_time=datetime.now(tz=timezone.utc),
+            order_value=order_value,
+            status=OrderStatus.PENDING,
+        )
+        saved = self._orders.save(new_order)
+        self._notify(
+            requesting_user.customer_id,
+            "order_created",
+            f"Your reorder {saved.order_id} has been placed.",
+        )
+        return saved
+
+    def get_tracking(self, requesting_user: User, order_id: str) -> Order:
+        order = self._get_order_or_raise(order_id)
+        if requesting_user.role == UserRole.CUSTOMER and order.customer_id != requesting_user.customer_id:
+            raise AuthorizationError("You may not access this order.")
+        return order
 
     def _get_order_or_raise(self, order_id: str) -> Order:
         order = self._orders.get_by_id(order_id)
