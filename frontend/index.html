@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SnackOverflow Menu</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>SnackOverflow Menu</h1>
+        <p>Browse menu items from your backend API.</p>
+      </header>
+
+      <section class="card">
+        <h2>Connection</h2>
+        <label for="apiBase">API Base URL</label>
+        <input id="apiBase" type="text" value="http://localhost:8000/api/v1" />
+      </section>
+
+      <section class="card">
+        <h2>Authentication</h2>
+        <form id="loginForm" class="row">
+          <input id="email" type="email" placeholder="Email" required />
+          <input id="password" type="password" placeholder="Password" required />
+          <button type="submit">Login</button>
+        </form>
+        <div class="row compact">
+          <label for="token">Access Token</label>
+          <textarea
+            id="token"
+            rows="3"
+            placeholder="JWT token appears here after login"
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Restaurant Menu</h2>
+        <form id="menuForm" class="row">
+          <input
+            id="restaurantId"
+            type="text"
+            placeholder="Restaurant ID"
+            required
+          />
+          <button type="submit">Load Menu</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Search and Filter</h2>
+        <form id="searchForm" class="row">
+          <input id="searchQuery" type="text" placeholder="Search by item name" />
+          <button type="submit">Search</button>
+        </form>
+
+        <form id="filterForm" class="row">
+          <input id="category" type="text" placeholder="Category (optional)" />
+          <input id="minPrice" type="number" step="0.01" min="0" placeholder="Min price" />
+          <input id="maxPrice" type="number" step="0.01" min="0" placeholder="Max price" />
+          <button type="submit">Filter</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Results</h2>
+        <p id="statusText">No data loaded yet.</p>
+        <ul id="menuList" class="menu-list"></ul>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
