@@ -35,7 +35,9 @@ class PaymentService:
         self._processor = payment_processor or _default_simulated_processor
         self._notifications = notification_service
 
-    def process_payment(self, order_id: str, customer, promo_discount: float = 0) -> PaymentResult:
+    def process_payment(
+        self, order_id: str, customer, promo_discount: float = 0.0
+    ) -> PaymentResult:
         order = self._orders.get_by_id(order_id)
         if order is None:
             raise NotFoundError(f"Order '{order_id}' not found.")
@@ -50,7 +52,7 @@ class PaymentService:
             raise AuthorizationError("You can only pay for your own orders.")
 
         breakdown = self._pricing.get_price_breakdown(order_id, customer)
-        amount = max(0, breakdown.grand_total - promo_discount)
+        amount = max(0.0, round(breakdown.grand_total - promo_discount, 2))
 
         approved = self._processor(amount)
 
@@ -64,18 +66,17 @@ class PaymentService:
                 f"Payment of ${amount:.2f} for order '{order_id}' was declined."
             )
 
-        self._order_service.complete_order(order_id)
         self._notify(
             customer.customer_id,
             "payment_approved",
-            f"Payment of ${amount:.2f} for order {order_id} was approved.",
+            f"Payment of ${amount:.2f} for order {order_id} was approved. Your order is being prepared.",
         )
 
         return PaymentResult(
             order_id=order_id,
             amount_charged=amount,
             status="approved",
-            message=f"Payment of ${amount:.2f} approved. Order is now complete.",
+            message=f"Payment of ${amount:.2f} approved. Your order is being prepared.",
         )
 
     def _notify(self, user_id: str, event_type: str, message: str) -> None:

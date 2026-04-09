@@ -261,3 +261,104 @@ class TestCompleteOrder:
 
         with pytest.raises(BusinessRuleError):
             service.complete_order(completed_order.order_id)
+
+
+class TestReorder:
+
+    def test_reorder_uses_original_items_when_no_override_is_provided(
+        self,
+        mock_order_repo,
+        mock_menu_repo,
+        mock_restaurant_repo,
+        mock_notification_service,
+        customer_user,
+        completed_order,
+        sample_restaurant,
+        sample_menu_item,
+    ):
+        mock_order_repo.get_by_id.return_value = completed_order
+        mock_restaurant_repo.get_by_id.return_value = sample_restaurant
+        mock_menu_repo.get_by_id.return_value = sample_menu_item
+        mock_order_repo.save.side_effect = lambda order: order
+        service = make_service(
+            mock_order_repo,
+            mock_menu_repo,
+            mock_restaurant_repo,
+            mock_notification_service,
+        )
+
+        result = service.reorder(customer_user, completed_order.order_id)
+
+        assert result.order_id != completed_order.order_id
+        assert result.items == completed_order.items
+        assert result.customer_id == completed_order.customer_id
+        assert result.restaurant_id == completed_order.restaurant_id
+        assert result.status == OrderStatus.PENDING
+        assert completed_order.status == OrderStatus.COMPLETED
+
+    def test_reorder_uses_override_items_when_provided(
+        self,
+        mock_order_repo,
+        mock_menu_repo,
+        mock_restaurant_repo,
+        customer_user,
+        completed_order,
+        sample_restaurant,
+        sample_menu_item,
+    ):
+        updated_item = sample_menu_item.model_copy(update={"food_item_id": "item-002"})
+        mock_order_repo.get_by_id.return_value = completed_order
+        mock_restaurant_repo.get_by_id.return_value = sample_restaurant
+        mock_menu_repo.get_by_id.return_value = updated_item
+        mock_order_repo.save.side_effect = lambda order: order
+        service = make_service(mock_order_repo, mock_menu_repo, mock_restaurant_repo)
+
+        result = service.reorder(
+            customer_user,
+            completed_order.order_id,
+            [updated_item.food_item_id],
+        )
+
+        assert result.items == [updated_item.food_item_id]
+
+    def test_reorder_rejects_orders_owned_by_another_customer(
+        self,
+        mock_order_repo,
+        mock_menu_repo,
+        mock_restaurant_repo,
+        loyalty_customer,
+        completed_order,
+    ):
+        mock_order_repo.get_by_id.return_value = completed_order
+        service = make_service(mock_order_repo, mock_menu_repo, mock_restaurant_repo)
+
+        with pytest.raises(AuthorizationError):
+            service.reorder(loyalty_customer, completed_order.order_id)
+
+    def test_reorder_rejects_non_completed_orders(
+        self,
+        mock_order_repo,
+        mock_menu_repo,
+        mock_restaurant_repo,
+        customer_user,
+        sample_order,
+    ):
+        mock_order_repo.get_by_id.return_value = sample_order
+        service = make_service(mock_order_repo, mock_menu_repo, mock_restaurant_repo)
+
+        with pytest.raises(BusinessRuleError):
+            service.reorder(customer_user, sample_order.order_id)
+
+    def test_reorder_rejects_empty_override_items(
+        self,
+        mock_order_repo,
+        mock_menu_repo,
+        mock_restaurant_repo,
+        customer_user,
+        completed_order,
+    ):
+        mock_order_repo.get_by_id.return_value = completed_order
+        service = make_service(mock_order_repo, mock_menu_repo, mock_restaurant_repo)
+
+        with pytest.raises(BusinessRuleError):
+            service.reorder(customer_user, completed_order.order_id, [])

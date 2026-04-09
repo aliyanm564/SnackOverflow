@@ -105,6 +105,32 @@ class OrderService:
             limit=limit,
         )
 
+    def reorder(
+        self,
+        requesting_user: User,
+        original_order_id: str,
+        food_item_ids: Optional[List[str]] = None,
+    ) -> Order:
+        if requesting_user.role != UserRole.CUSTOMER:
+            raise AuthorizationError("Only customers can reorder.")
+
+        original = self._get_order_or_raise(original_order_id)
+
+        if original.customer_id != requesting_user.customer_id:
+            raise AuthorizationError("You can only reorder from your own past orders.")
+
+        if original.status != OrderStatus.COMPLETED:
+            raise BusinessRuleError(
+                f"Order '{original_order_id}' cannot be reordered because it is {original.status.value}."
+            )
+
+        items_to_use = food_item_ids if food_item_ids is not None else original.items
+
+        if not items_to_use:
+            raise BusinessRuleError("An order must contain at least one item.")
+
+        return self.place_order(requesting_user, original.restaurant_id, items_to_use)
+
     def cancel_order(self, requesting_user: User, order_id: str) -> Order:
         order = self._get_order_or_raise(order_id)
 

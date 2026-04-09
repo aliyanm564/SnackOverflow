@@ -1,9 +1,12 @@
 import csv
 import hashlib
 import os
+import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Generator, Optional
+
+import bcrypt as _bcrypt
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -242,11 +245,172 @@ def _seed_delivery(db: Session, row: dict, seen: set) -> None:
         delivery_delay=float(row["delivery_delay"]) if row.get("delivery_delay") else None,
         delivery_distance=float(row["delivery_distance"]) if row.get("delivery_distance") else None,
         delivery_method=row.get("delivery_method", "").strip().lower() or None,
-        route_taken=row.get("route_type", "").strip() or None,   # "Bike-friendly" etc.
-        route_type=route_type_normalised,                         # "route_4" etc.
+        route_taken=row.get("route_type", "").strip() or None,
+        route_type=route_type_normalised,
         route_efficiency=float(row["route_efficiency"]) if row.get("route_efficiency") else None,
         traffic_condition=row.get("traffic_condition", "").strip() or None,
         weather_condition=row.get("weather_condition", "").strip() or None,
         predicted_delivery_mode=row.get("predicted_delivery_mode", "").strip() or None,
         traffic_avoidance=_parse_bool(row.get("traffic_avoidance", "false")),
     ))
+
+
+def _hash_pw(plain: str) -> str:
+    return _bcrypt.hashpw(plain.encode(), _bcrypt.gensalt()).decode()
+
+
+_DEMO_RESTAURANTS = [
+    {
+        "name": "The Burger Joint",
+        "location": "Los Angeles, CA",
+        "description": "Smash burgers and loaded fries made fresh daily.",
+        "items": [
+            {"name": "Classic Smash Burger",  "category": "Burgers", "price": 12.99},
+            {"name": "Double Cheese Burger",  "category": "Burgers", "price": 14.99},
+            {"name": "Crispy Chicken Burger", "category": "Burgers", "price": 13.49},
+            {"name": "Veggie Burger",         "category": "Burgers", "price": 11.99},
+            {"name": "Loaded Fries",          "category": "Sides",   "price": 7.99},
+            {"name": "Onion Rings",           "category": "Sides",   "price": 5.99},
+            {"name": "Vanilla Milkshake",     "category": "Drinks",  "price": 6.49},
+        ],
+    },
+    {
+        "name": "Pizza Palace",
+        "location": "Los Angeles, CA",
+        "description": "Wood-fired pizza with fresh ingredients.",
+        "items": [
+            {"name": "Margherita Pizza",      "category": "Pizza",   "price": 14.99},
+            {"name": "Pepperoni Pizza",       "category": "Pizza",   "price": 16.99},
+            {"name": "BBQ Chicken Pizza",     "category": "Pizza",   "price": 17.99},
+            {"name": "Mushroom & Truffle",    "category": "Pizza",   "price": 18.99},
+            {"name": "Caesar Salad",          "category": "Salads",  "price": 9.99},
+            {"name": "Garlic Bread",          "category": "Sides",   "price": 5.49},
+            {"name": "Tiramisu",              "category": "Dessert", "price": 7.99},
+        ],
+    },
+    {
+        "name": "Sushi World",
+        "location": "Los Angeles, CA",
+        "description": "Fresh sushi and Japanese favourites.",
+        "items": [
+            {"name": "Salmon Roll",           "category": "Sushi",      "price": 12.99},
+            {"name": "Tuna Roll",             "category": "Sushi",      "price": 13.99},
+            {"name": "Dragon Roll",           "category": "Sushi",      "price": 15.99},
+            {"name": "Spicy Tuna Roll",       "category": "Sushi",      "price": 14.49},
+            {"name": "Miso Soup",             "category": "Soup",       "price": 4.99},
+            {"name": "Edamame",               "category": "Appetiser",  "price": 5.99},
+            {"name": "Chicken Teriyaki",      "category": "Mains",      "price": 16.99},
+        ],
+    },
+    {
+        "name": "Taco Town",
+        "location": "Los Angeles, CA",
+        "description": "Authentic street tacos and burritos.",
+        "items": [
+            {"name": "Beef Taco",             "category": "Tacos",   "price": 4.99},
+            {"name": "Chicken Taco",          "category": "Tacos",   "price": 4.49},
+            {"name": "Fish Taco",             "category": "Tacos",   "price": 5.49},
+            {"name": "Carne Asada Burrito",   "category": "Burritos","price": 13.99},
+            {"name": "Veggie Burrito",        "category": "Burritos","price": 11.99},
+            {"name": "Guacamole & Chips",     "category": "Sides",   "price": 6.99},
+            {"name": "Horchata",              "category": "Drinks",  "price": 4.49},
+        ],
+    },
+    {
+        "name": "Pasta & More",
+        "location": "Los Angeles, CA",
+        "description": "Handmade pasta and classic Italian dishes.",
+        "items": [
+            {"name": "Spaghetti Bolognese",   "category": "Pasta",   "price": 15.99},
+            {"name": "Fettuccine Alfredo",    "category": "Pasta",   "price": 14.99},
+            {"name": "Penne Arrabbiata",      "category": "Pasta",   "price": 13.99},
+            {"name": "Lasagne",               "category": "Mains",   "price": 16.99},
+            {"name": "Caprese Salad",         "category": "Starters","price": 8.99},
+            {"name": "Bruschetta",            "category": "Starters","price": 6.99},
+            {"name": "Panna Cotta",           "category": "Dessert", "price": 7.49},
+        ],
+    },
+]
+
+
+def seed_demo_data(session: Optional[Session] = None) -> None:
+    def _run(db: Session) -> None:
+        existing_emails = {
+            email for (email,) in db.query(UserORM.email).filter(UserORM.email.isnot(None))
+        }
+
+        owner_email = "owner@snackoverflow.com"
+        owner_id: Optional[str] = None
+
+        if owner_email not in existing_emails:
+            owner_id = str(uuid.uuid4())
+            db.add(UserORM(
+                customer_id=owner_id,
+                name="Alex Owner",
+                role="restaurant_owner",
+                email=owner_email,
+                hashed_password=_hash_pw("password123"),
+                loyalty_program=False,
+                order_history_count=0,
+            ))
+            db.flush()
+        else:
+            row = db.query(UserORM.customer_id).filter(UserORM.email == owner_email).first()
+            if row:
+                owner_id = row[0]
+
+        for email, name in [
+            ("customer@snackoverflow.com", "Jordan Customer"),
+            ("alice@snackoverflow.com",    "Alice Chen"),
+            ("bob@snackoverflow.com",      "Bob Martinez"),
+        ]:
+            if email not in existing_emails:
+                db.add(UserORM(
+                    customer_id=str(uuid.uuid4()),
+                    name=name,
+                    role="customer",
+                    email=email,
+                    hashed_password=_hash_pw("password123"),
+                    loyalty_program=False,
+                    order_history_count=0,
+                ))
+
+        if owner_id is None:
+            return
+
+        existing_restaurant_names = {
+            name for (name,) in db.query(RestaurantORM.name).filter(
+                RestaurantORM.owner_id == owner_id
+            )
+        }
+
+        for restaurant_def in _DEMO_RESTAURANTS:
+            if restaurant_def["name"] in existing_restaurant_names:
+                continue
+
+            restaurant_id = str(uuid.uuid4())
+            db.add(RestaurantORM(
+                restaurant_id=restaurant_id,
+                owner_id=owner_id,
+                name=restaurant_def["name"],
+                location=restaurant_def["location"],
+                description=restaurant_def["description"],
+                avg_rating=None,
+                review_count=0,
+            ))
+            db.flush()
+
+            for item_def in restaurant_def["items"]:
+                db.add(MenuItemORM(
+                    food_item_id=str(uuid.uuid4()),
+                    restaurant_id=restaurant_id,
+                    name=item_def["name"],
+                    category=item_def["category"],
+                    price=item_def["price"],
+                ))
+
+    if session is not None:
+        _run(session)
+    else:
+        with get_db() as db:
+            _run(db)

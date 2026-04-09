@@ -241,3 +241,83 @@ class TestCancelOrder:
             )
 
         assert resp.status_code == 422
+
+
+class TestReorder:
+
+    def test_reorder_returns_201(
+        self, client, customer, customer_headers, completed_order, override
+    ):
+        mock_svc = MagicMock()
+        reordered = completed_order.model_copy(
+            update={"order_id": "order-api-002", "status": OrderStatus.PENDING}
+        )
+        mock_svc.reorder.return_value = reordered
+
+        with override(get_order_service, mock_svc, current_user=customer):
+            resp = client.post(
+                f"{ORDER_URL}/{completed_order.order_id}/reorder",
+                json={},
+                headers=customer_headers,
+            )
+
+        assert resp.status_code == 201
+        assert resp.json()["order_id"] == "order-api-002"
+        mock_svc.reorder.assert_called_once_with(
+            requesting_user=customer,
+            original_order_id=completed_order.order_id,
+            food_item_ids=None,
+        )
+
+    def test_reorder_passes_override_items_to_service(
+        self, client, customer, customer_headers, completed_order, override
+    ):
+        mock_svc = MagicMock()
+        reordered = completed_order.model_copy(update={"order_id": "order-api-003"})
+        mock_svc.reorder.return_value = reordered
+
+        with override(get_order_service, mock_svc, current_user=customer):
+            resp = client.post(
+                f"{ORDER_URL}/{completed_order.order_id}/reorder",
+                json={"food_item_ids": ["item-api-123"]},
+                headers=customer_headers,
+            )
+
+        assert resp.status_code == 201
+        mock_svc.reorder.assert_called_once_with(
+            requesting_user=customer,
+            original_order_id=completed_order.order_id,
+            food_item_ids=["item-api-123"],
+        )
+
+    def test_reorder_returns_403_for_other_users(
+        self, client, customer, customer_headers, completed_order, override
+    ):
+        mock_svc = MagicMock()
+        mock_svc.reorder.side_effect = AuthorizationError(
+            "You can only reorder from your own past orders."
+        )
+
+        with override(get_order_service, mock_svc, current_user=customer):
+            resp = client.post(
+                f"{ORDER_URL}/{completed_order.order_id}/reorder",
+                json={},
+                headers=customer_headers,
+            )
+
+        assert resp.status_code == 403
+
+    def test_reorder_returns_422_for_non_completed_orders(
+        self, client, customer, customer_headers, sample_order, override
+    ):
+        mock_svc = MagicMock()
+        mock_svc.reorder.side_effect = BusinessRuleError("Order cannot be reordered.")
+
+        with override(get_order_service, mock_svc, current_user=customer):
+            resp = client.post(
+                f"{ORDER_URL}/{sample_order.order_id}/reorder",
+                json={},
+                headers=customer_headers,
+            )
+
+        assert resp.status_code == 422

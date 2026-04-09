@@ -112,6 +112,10 @@ class PlaceOrderRequest(BaseModel):
     food_item_ids: List[str] = Field(min_length=1)
 
 
+class ReorderRequest(BaseModel):
+    food_item_ids: Optional[List[str]] = None
+
+
 class OrderResponse(BaseModel):
     order_id: str
     customer_id: str
