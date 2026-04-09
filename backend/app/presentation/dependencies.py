@@ -22,7 +22,9 @@ from backend.app.application.services.notification_service import NotificationSe
 from backend.app.application.services.order_service import OrderService
 from backend.app.application.services.payment_service import PaymentService
 from backend.app.application.services.pricing_service import PricingService
+from backend.app.application.services.promo_service import PromoService
 from backend.app.application.services.restaurant_service import RestaurantService
+from backend.app.application.services.review_service import ReviewService
 from backend.app.application.services.user_service import UserService
 from backend.app.domain.models.user import User, UserRole
 from backend.app.infrastructure.database import get_db_session
@@ -30,7 +32,9 @@ from backend.app.infrastructure.repositories.delivery_repository import Delivery
 from backend.app.infrastructure.repositories.menu_repository import MenuRepository
 from backend.app.infrastructure.repositories.notification_repository import NotificationRepository
 from backend.app.infrastructure.repositories.order_repository import OrderRepository
+from backend.app.infrastructure.repositories.promo_repository import PromoRepository
 from backend.app.infrastructure.repositories.restaurant_repository import RestaurantRepository
+from backend.app.infrastructure.repositories.review_repository import ReviewRepository
 from backend.app.infrastructure.repositories.user_repository import UserRepository
 
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -112,10 +116,14 @@ def get_order_service(
 def get_delivery_service(
     delivery_repo: DeliveryRepository = Depends(get_delivery_repo),
     order_repo: OrderRepository = Depends(get_order_repo),
+    restaurant_repo: RestaurantRepository = Depends(get_restaurant_repo),
+    notification_svc: NotificationService = Depends(get_notification_service),
 ) -> DeliveryService:
     return DeliveryService(
         delivery_repository=delivery_repo,
         order_repository=order_repo,
+        restaurant_repository=restaurant_repo,
+        notification_service=notification_svc,
     )
 
 
@@ -137,6 +145,32 @@ def get_payment_service(
         order_service=order_svc,
         pricing_service=pricing_svc,
         notification_service=notification_svc,
+    )
+
+
+def get_promo_repo(db: Session = Depends(get_db)) -> PromoRepository:
+    return PromoRepository(db)
+
+
+def get_promo_service(
+    promo_repo: PromoRepository = Depends(get_promo_repo),
+) -> PromoService:
+    return PromoService(promo_repository=promo_repo)
+
+
+def get_review_repo(db: Session = Depends(get_db)) -> ReviewRepository:
+    return ReviewRepository(db)
+
+
+def get_review_service(
+    review_repo: ReviewRepository = Depends(get_review_repo),
+    order_repo: OrderRepository = Depends(get_order_repo),
+    restaurant_repo: RestaurantRepository = Depends(get_restaurant_repo),
+) -> ReviewService:
+    return ReviewService(
+        review_repository=review_repo,
+        order_repository=order_repo,
+        restaurant_repository=restaurant_repo,
     )
 
 

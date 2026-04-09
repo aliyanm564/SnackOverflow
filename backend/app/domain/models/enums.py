@@ -3,6 +3,7 @@ from enum import Enum
 
 class OrderStatus(str, Enum):
     PENDING = "pending"
+    OUT_FOR_DELIVERY = "out_for_delivery"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
 

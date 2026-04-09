@@ -8,12 +8,13 @@ from backend.app.application.exceptions import (
     NotFoundError,
 )
 from backend.app.domain.models.delivery import Delivery
-from backend.app.domain.models.enums import DeliveryMethod, RouteType
+from backend.app.domain.models.enums import DeliveryMethod, OrderStatus, RouteType
 from backend.app.domain.models.user import User, UserRole
 from backend.app.infrastructure.repositories.delivery_repository import (
     DeliveryRepository,
 )
 from backend.app.infrastructure.repositories.order_repository import OrderRepository
+from backend.app.infrastructure.repositories.restaurant_repository import RestaurantRepository
 
 class DeliveryService:
 
@@ -21,9 +22,13 @@ class DeliveryService:
         self,
         delivery_repository: DeliveryRepository,
         order_repository: OrderRepository,
+        restaurant_repository: RestaurantRepository,
+        notification_service=None,
     ) -> None:
         self._deliveries = delivery_repository
         self._orders = order_repository
+        self._restaurants = restaurant_repository
+        self._notifications = notification_service
 
     def assign_delivery(
         self,
@@ -33,12 +38,22 @@ class DeliveryService:
         delivery_distance: Optional[float] = None,
         estimated_delivery_time: Optional[datetime] = None,
     ) -> Delivery:
-      
-        self._check_not_customer(requesting_user)
+
+        if requesting_user.role != UserRole.RESTAURANT_OWNER:
+            raise AuthorizationError("Only restaurant owners can assign deliveries.")
 
         order = self._orders.get_by_id(order_id)
         if order is None:
             raise NotFoundError(f"Order '{order_id}' not found.")
+
+        restaurant = self._restaurants.get_by_id(order.restaurant_id)
+        if restaurant is None or restaurant.owner_id != requesting_user.customer_id:
+            raise AuthorizationError("You can only assign deliveries for your own restaurant's orders.")
+
+        if order.status != OrderStatus.PENDING:
+            raise BusinessRuleError(
+                f"Order '{order_id}' is {order.status.value} and cannot be assigned a delivery."
+            )
 
         existing = self._deliveries.get_by_id(order_id)
         if existing is not None:
@@ -52,7 +67,17 @@ class DeliveryService:
             delivery_distance=delivery_distance,
             delivery_time=estimated_delivery_time,
         )
-        return self._deliveries.save(delivery)
+        saved = self._deliveries.save(delivery)
+
+        self._orders.update_status(order_id, OrderStatus.OUT_FOR_DELIVERY)
+
+        self._notify(
+            order.customer_id,
+            "order_out_for_delivery",
+            f"Your order {order_id} is out for delivery!",
+        )
+
+        return saved
 
     def get_delivery(self, order_id: str) -> Delivery:
         delivery = self._deliveries.get_by_id(order_id)
@@ -64,18 +89,19 @@ class DeliveryService:
         return self._deliveries.get_paginated(offset=offset, limit=limit)
 
     def update_delivery(self, requesting_user: User, order_id: str, updates: dict) -> Delivery:
-        self._check_not_customer(requesting_user)
+        if requesting_user.role == UserRole.CUSTOMER:
+            raise AuthorizationError("Customers cannot perform this action.")
 
         delivery = self.get_delivery(order_id)
-        
+
         valid_fields = {k: v for k, v in updates.items() if v is not None}
-        
+
         updated_delivery = delivery.model_copy(update=valid_fields)
         return self._deliveries.save(updated_delivery)
-    
-    def _check_not_customer(self, user: User) -> None:
-        if user.role == UserRole.CUSTOMER:
-            raise AuthorizationError("Customers cannot perform this action.")
+
+    def _notify(self, user_id: str, event_type: str, message: str) -> None:
+        if self._notifications is not None:
+            self._notifications.create(user_id, event_type, message)
 
     def get_by_method(self, method: DeliveryMethod) -> List[Delivery]:
         return self._deliveries.get_by_delivery_method(method)
