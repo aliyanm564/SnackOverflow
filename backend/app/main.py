@@ -36,10 +36,20 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# JWT is sent in Authorization, not cookies. Browsers reject allow_origins="*"
+# together with allow_credentials=True, which breaks fetch from another port (e.g. :3000 → :8000).
+_cors_raw = os.getenv("CORS_ORIGINS", "").strip()
+if _cors_raw == "*" or not _cors_raw:
+    _cors_origins = ["*"]
+    _cors_credentials = False
+else:
+    _cors_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+    _cors_credentials = True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

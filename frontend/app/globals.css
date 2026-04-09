@@ -21,9 +21,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
@@ -34,9 +33,9 @@ body {
     radial-gradient(ellipse 80% 50% at 100% 50%, rgba(234, 88, 12, 0.08), transparent),
     radial-gradient(ellipse 60% 40% at 0% 80%, rgba(120, 113, 108, 0.12), transparent);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
 .font-display {
-  font-family: var(--font-fraunces), Georgia, serif;
+  font-family: var(--font-display), Georgia, serif;
 }

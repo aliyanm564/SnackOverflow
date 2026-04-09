@@ -1,26 +1,21 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
 const fraunces = Fraunces({
-  variable: "--font-fraunces",
+  variable: "--font-display",
   subsets: ["latin"],
   axes: ["SOFT", "WONK", "opsz"],
 });
 
 export const metadata: Metadata = {
-  title: "SnackOverflow — Menu",
-  description: "Browse SnackOverflow restaurant menus, search, and filter items.",
+  title: "SnackOverflow — Menus and availability",
+  description: "Browse restaurants, open menus, and see when each item is available.",
 };
 
 export default function RootLayout({
@@ -30,9 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased`}
-      >
+      <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         {children}
       </body>
     </html>

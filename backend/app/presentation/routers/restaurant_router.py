@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from backend.app.application.services.restaurant_service import RestaurantService
 from backend.app.domain.models.user import User
@@ -44,16 +44,6 @@ def create_restaurant(
     return _to_response(restaurant)
 
 
-@router.get("/{restaurant_id}", response_model=RestaurantResponse)
-@handle_app_errors
-def get_restaurant(
-    restaurant_id: str,
-    svc: RestaurantService = Depends(get_restaurant_service),
-):
-    restaurant = svc.get_restaurant(restaurant_id)
-    return _to_response(restaurant)
-
-
 @router.get("", response_model=List[RestaurantResponse])
 def list_restaurants(
     location: Optional[str] = Query(default=None),
@@ -75,6 +65,16 @@ def get_owner_restaurants(
     svc: RestaurantService = Depends(get_restaurant_service),
 ):
     return [_to_response(r) for r in svc.get_owner_restaurants(owner_id)]
+
+
+@router.get("/{restaurant_id}", response_model=RestaurantResponse)
+@handle_app_errors
+def get_restaurant(
+    restaurant_id: str,
+    svc: RestaurantService = Depends(get_restaurant_service),
+):
+    restaurant = svc.get_restaurant(restaurant_id)
+    return _to_response(restaurant)
 
 
 @router.patch("/{restaurant_id}", response_model=RestaurantResponse)
