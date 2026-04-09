@@ -11,7 +11,11 @@ from backend.app.presentation.dependencies import (
     get_order_service,
     handle_app_errors,
 )
-from backend.app.presentation.schemas import OrderResponse, PlaceOrderRequest
+from backend.app.presentation.schemas import (
+    OrderResponse,
+    PlaceOrderRequest,
+    ReorderRequest,
+)
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -122,6 +126,27 @@ def get_order(
             detail="Access denied.",
         )
 
+    return _to_response(order)
+
+
+@router.post(
+    "/{order_id}/reorder",
+    response_model=OrderResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Reorder a past order, optionally editing the items (customers only)",
+)
+@handle_app_errors
+def reorder(
+    order_id: str,
+    body: Optional[ReorderRequest] = None,
+    current_user: User = Depends(get_current_user),
+    order_svc: OrderService = Depends(get_order_service),
+):
+    order = order_svc.reorder(
+        requesting_user=current_user,
+        original_order_id=order_id,
+        food_item_ids=body.food_item_ids if body else None,
+    )
     return _to_response(order)
 
 
