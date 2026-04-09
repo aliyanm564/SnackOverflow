@@ -20,6 +20,8 @@ services:
 
       APP_ENV: ${APP_ENV:-development}
 
+      TZ: America/Los_Angeles
+
     volumes:
       - db_data:/app/db
       - ./backend/data/food_delivery.csv:/app/data/food_delivery.csv:ro

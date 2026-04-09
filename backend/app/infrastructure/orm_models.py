@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -47,9 +48,12 @@ class RestaurantORM(Base):
     name = Column(String, nullable=True)
     location = Column(String, nullable=True)
     description = Column(Text, nullable=True)
+    avg_rating = Column(Float, nullable=True)
+    review_count = Column(Integer, default=0, nullable=False)
 
     menu_items = relationship("MenuItemORM", back_populates="restaurant")
     orders = relationship("OrderORM", back_populates="restaurant")
+    reviews = relationship("ReviewORM", back_populates="restaurant")
 
     def __repr__(self) -> str:
         return f"<RestaurantORM id={self.restaurant_id} name={self.name}>"
@@ -63,6 +67,8 @@ class MenuItemORM(Base):
     name = Column(String, nullable=False)
     category = Column(String, nullable=True)
     price = Column(Float, nullable=True)
+    available_from = Column(Time, nullable=True)
+    available_until = Column(Time, nullable=True)
 
     restaurant = relationship("RestaurantORM", back_populates="menu_items")
 
@@ -113,6 +119,54 @@ class DeliveryORM(Base):
     def __repr__(self) -> str:
         return f"<DeliveryORM order_id={self.order_id} method={self.delivery_method}>"
 
+class PromoCodeORM(Base):
+
+    __tablename__ = "promo_codes"
+
+    promo_id = Column(String, primary_key=True, index=True)
+    code = Column(String, unique=True, nullable=False, index=True)
+    discount_type = Column(String, nullable=False)
+    discount_value = Column(Float, nullable=False)
+    expiry_date = Column(DateTime, nullable=True)
+    usage_limit = Column(Integer, nullable=True)
+    usage_count = Column(Integer, default=0, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    owner_id = Column(String, ForeignKey("users.customer_id"), nullable=False)
+
+    assignments = relationship(
+        "PromoAssignmentORM", back_populates="promo", cascade="all, delete-orphan"
+    )
+
+
+class PromoAssignmentORM(Base):
+
+    __tablename__ = "promo_assignments"
+
+    promo_id = Column(String, ForeignKey("promo_codes.promo_id"), primary_key=True)
+    customer_id = Column(String, ForeignKey("users.customer_id"), primary_key=True)
+
+    promo = relationship("PromoCodeORM", back_populates="assignments")
+
+
+class ReviewORM(Base):
+
+    __tablename__ = "reviews"
+
+    review_id = Column(String, primary_key=True, index=True)
+    order_id = Column(String, ForeignKey("orders.order_id"), unique=True, nullable=False)
+    customer_id = Column(String, ForeignKey("users.customer_id"), nullable=False)
+    restaurant_id = Column(String, ForeignKey("restaurants.restaurant_id"), nullable=False)
+    rating = Column(Integer, nullable=False)
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, nullable=True)
+
+    restaurant = relationship("RestaurantORM", back_populates="reviews")
+
+    def __repr__(self) -> str:
+        return f"<ReviewORM id={self.review_id} rating={self.rating}>"
+
+
 class NotificationORM(Base):
 
     __tablename__ = "notifications"
@@ -121,7 +175,7 @@ class NotificationORM(Base):
     user_id = Column(String, ForeignKey("users.customer_id"), nullable=False)
     event_type = Column(String, nullable=False)
     message = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     is_read = Column(Boolean, default=False, nullable=False)
 
     user = relationship("UserORM", back_populates="notifications")
