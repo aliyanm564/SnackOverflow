@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
@@ -73,6 +73,8 @@ class RestaurantResponse(BaseModel):
     name: Optional[str]
     location: Optional[str]
     description: Optional[str]
+    avg_rating: Optional[float] = None
+    review_count: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -81,12 +83,16 @@ class CreateMenuItemRequest(BaseModel):
     name: str = Field(min_length=1)
     category: Optional[str] = None
     price: Optional[float] = Field(default=None, ge=0)
+    available_from: Optional[time] = None
+    available_until: Optional[time] = None
 
 
 class UpdateMenuItemRequest(BaseModel):
     name: Optional[str] = None
     category: Optional[str] = None
     price: Optional[float] = Field(default=None, ge=0)
+    available_from: Optional[time] = None
+    available_until: Optional[time] = None
 
 
 class MenuItemResponse(BaseModel):
@@ -95,6 +101,8 @@ class MenuItemResponse(BaseModel):
     name: str
     category: Optional[str]
     price: Optional[float]
+    available_from: Optional[time] = None
+    available_until: Optional[time] = None
 
     model_config = {"from_attributes": True}
 
@@ -172,11 +180,51 @@ class PriceBreakdownResponse(BaseModel):
     grand_total: float
 
 
+class ProcessPaymentRequest(BaseModel):
+    promo_code: Optional[str] = None
+
+
 class PaymentResponse(BaseModel):
     order_id: str
     amount_charged: float
     status: str
     message: str
+
+
+class CreatePromoRequest(BaseModel):
+    code: str = Field(min_length=1, max_length=30)
+    discount_type: str
+    discount_value: float = Field(gt=0)
+    expiry_date: Optional[datetime] = None
+    usage_limit: Optional[int] = Field(default=None, ge=1)
+
+
+class AssignPromoRequest(BaseModel):
+    customer_ids: List[str]
+
+
+class ValidatePromoRequest(BaseModel):
+    code: str
+    order_id: str
+
+
+class ValidatePromoResponse(BaseModel):
+    valid: bool
+    discount_amount: float
+    adjusted_total: float
+    message: str
+
+
+class PromoResponse(BaseModel):
+    promo_id: str
+    code: str
+    discount_type: str
+    discount_value: float
+    expiry_date: Optional[datetime]
+    usage_limit: Optional[int]
+    usage_count: int
+    is_active: bool
+    assigned_customer_ids: List[str]
 
 
 class NotificationResponse(BaseModel):
@@ -186,6 +234,44 @@ class NotificationResponse(BaseModel):
     message: str
     created_at: datetime
     is_read: bool
+
+
+class ReviewCreateRequest(BaseModel):
+    order_id: str
+    rating: int = Field(ge=1, le=5)
+    comment: Optional[str] = None
+
+
+class ReviewUpdateRequest(BaseModel):
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
+    comment: Optional[str] = None
+
+
+class ReviewResponse(BaseModel):
+    review_id: str
+    order_id: str
+    customer_id: str
+    restaurant_id: str
+    rating: int
+    comment: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    model_config = {"from_attributes": True}
+
+
+class OrderTrackingResponse(BaseModel):
+    order_id: str
+    status: str
+    order_time: Optional[datetime]
+    order_value: Optional[float]
+    restaurant_id: str
+    items: List[str]
+    delivery_method: Optional[str] = None
+    estimated_delivery_time: Optional[datetime] = None
+    delivery_distance: Optional[float] = None
+
+    model_config = {"from_attributes": True}
 
 
 class ErrorResponse(BaseModel):
