@@ -34,5 +34,23 @@ services:
 
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    container_name: snackoverflow_frontend
+
+    ports:
+      - "3005:3000"
+
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+
+    depends_on:
+      - backend
+
+    restart: unless-stopped
+
 volumes:
   db_data:
