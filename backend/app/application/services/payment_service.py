@@ -72,6 +72,10 @@ class PaymentService:
             f"Payment of ${amount:.2f} for order {order_id} was approved. Your order is being prepared.",
         )
 
+        # Mark order as completed via domain/service layer so subsequent
+        # payments are rejected and persistence is consistent.
+        self._order_service.complete_order(order_id)
+
         return PaymentResult(
             order_id=order_id,
             amount_charged=amount,

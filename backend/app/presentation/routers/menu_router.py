@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from backend.app.application.services.menu_service import MenuService
+from backend.app.application.services.menu_service import MenuService, _UNSET
 from backend.app.domain.models.menu_item import MenuItem
 from backend.app.domain.models.user import User
 from backend.app.presentation.dependencies import (
@@ -26,6 +26,8 @@ def _to_response(item: MenuItem) -> MenuItemResponse:
         name=item.name,
         category=item.category,
         price=item.price,
+        available_from=item.available_from,
+        available_until=item.available_until,
     )
 
 
@@ -49,6 +51,8 @@ def add_menu_item(
             name=body.name,
             category=body.category,
             price=body.price,
+            available_from=body.available_from,
+            available_until=body.available_until,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
@@ -138,6 +142,12 @@ def update_menu_item(
     current_user: User = Depends(get_current_user),
     menu_svc: MenuService = Depends(get_menu_service),
 ):
+    availability_kwargs = {}
+    if "available_from" in body.model_fields_set:
+        availability_kwargs["available_from"] = body.available_from
+    if "available_until" in body.model_fields_set:
+        availability_kwargs["available_until"] = body.available_until
+
     try:
         updated = menu_svc.update_item(
             requesting_user=current_user,
@@ -145,6 +155,7 @@ def update_menu_item(
             name=body.name,
             category=body.category,
             price=body.price,
+            **availability_kwargs,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
