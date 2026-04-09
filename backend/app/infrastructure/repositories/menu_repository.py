@@ -83,6 +83,8 @@ class MenuRepository(BaseRepository[MenuItem, str]):
             name=orm_obj.name,
             category=orm_obj.category,
             price=orm_obj.price,
+            available_from=orm_obj.available_from,
+            available_until=orm_obj.available_until,
         )
 
     @staticmethod
@@ -93,4 +95,6 @@ class MenuRepository(BaseRepository[MenuItem, str]):
             name=domain_obj.name,
             category=domain_obj.category,
             price=domain_obj.price,
+            available_from=domain_obj.available_from,
+            available_until=domain_obj.available_until,
         )

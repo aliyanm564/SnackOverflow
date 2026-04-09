@@ -71,8 +71,10 @@ class RestaurantRepository(BaseRepository[Restaurant, str]):
             name=orm_obj.name,
             location=orm_obj.location,
             description=orm_obj.description,
+            avg_rating=orm_obj.avg_rating,
+            review_count=orm_obj.review_count or 0,
         )
-    
+
     @staticmethod
     def _to_orm(domain_obj: Restaurant) -> RestaurantORM:
         return RestaurantORM(
@@ -81,4 +83,6 @@ class RestaurantRepository(BaseRepository[Restaurant, str]):
             name=domain_obj.name,
             location=domain_obj.location,
             description=domain_obj.description,
+            avg_rating=domain_obj.avg_rating,
+            review_count=domain_obj.review_count,
         )

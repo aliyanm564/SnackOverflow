@@ -1,4 +1,5 @@
 import uuid
+from datetime import time
 from typing import List, Optional
 
 from backend.app.application.exceptions import AuthorizationError, NotFoundError
@@ -8,6 +9,8 @@ from backend.app.infrastructure.repositories.menu_repository import MenuReposito
 from backend.app.infrastructure.repositories.restaurant_repository import (
     RestaurantRepository,
 )
+
+_UNSET = object()
 
 
 class MenuService:
@@ -27,6 +30,8 @@ class MenuService:
         name: str,
         category: Optional[str] = None,
         price: Optional[float] = None,
+        available_from: Optional[time] = None,
+        available_until: Optional[time] = None,
     ) -> MenuItem:
         restaurant = self._restaurants.get_by_id(restaurant_id)
         if restaurant is None:
@@ -49,6 +54,8 @@ class MenuService:
             name=name,
             category=category,
             price=price,
+            available_from=available_from,
+            available_until=available_until,
         )
         return self._menu.save(item)
 
@@ -89,6 +96,8 @@ class MenuService:
         name: Optional[str] = None,
         category: Optional[str] = None,
         price: Optional[float] = None,
+        available_from=_UNSET,
+        available_until=_UNSET,
     ) -> MenuItem:
         item = self.get_item(food_item_id)
         self._assert_item_owner(requesting_user, item)
@@ -96,13 +105,20 @@ class MenuService:
         if price is not None and price < 0:
             raise ValueError("Item price cannot be negative.")
 
+        changes = {}
         if name is not None:
-            item = item.model_copy(update={"name": name})
+            changes["name"] = name
         if category is not None:
-            item = item.model_copy(update={"category": category})
+            changes["category"] = category
         if price is not None:
-            item = item.model_copy(update={"price": price})
+            changes["price"] = price
+        if available_from is not _UNSET:
+            changes["available_from"] = available_from
+        if available_until is not _UNSET:
+            changes["available_until"] = available_until
 
+        if changes:
+            item = item.model_copy(update=changes)
         return self._menu.save(item)
 
     def delete_item(self, requesting_user: User, food_item_id: str) -> None:
