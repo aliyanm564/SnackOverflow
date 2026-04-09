@@ -25,7 +25,7 @@ class OrderRepository(BaseRepository[Order, str]):
     def save(self, entity: Order) -> Order:
         orm_obj = self._to_orm(entity)
         merged = self._db.merge(orm_obj)
-        self._db.commit()
+        self._db.flush()
         return self._to_domain(merged)
 
     def delete(self, entity_id: str) -> bool:
@@ -80,7 +80,7 @@ class OrderRepository(BaseRepository[Order, str]):
         if orm_obj is None:
             return None
         orm_obj.status = new_status.value
-        self._db.commit()
+        self._db.flush()
         return self._to_domain(orm_obj)
 
     def get_paginated(

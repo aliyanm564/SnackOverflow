@@ -158,14 +158,13 @@ class OrderService:
                 f"Order '{order_id}' is already {order.status.value} and cannot be completed."
             )
 
-        mark_order_completed(order)
-        saved = self._orders.save(order)
+        updated = self._orders.update_status(order_id, OrderStatus.COMPLETED)
         self._notify(
             order.customer_id,
             "order_completed",
             f"Your order {order_id} has been completed.",
         )
-        return saved
+        return updated
 
     def _get_order_or_raise(self, order_id: str) -> Order:
         order = self._orders.get_by_id(order_id)

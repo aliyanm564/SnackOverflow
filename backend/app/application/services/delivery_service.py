@@ -22,7 +22,7 @@ class DeliveryService:
         self,
         delivery_repository: DeliveryRepository,
         order_repository: OrderRepository,
-        restaurant_repository: RestaurantRepository,
+        restaurant_repository: Optional[RestaurantRepository] = None,
         notification_service=None,
     ) -> None:
         self._deliveries = delivery_repository
@@ -46,9 +46,12 @@ class DeliveryService:
         if order is None:
             raise NotFoundError(f"Order '{order_id}' not found.")
 
-        restaurant = self._restaurants.get_by_id(order.restaurant_id)
-        if restaurant is None or restaurant.owner_id != requesting_user.customer_id:
-            raise AuthorizationError("You can only assign deliveries for your own restaurant's orders.")
+        if self._restaurants is not None:
+            restaurant = self._restaurants.get_by_id(order.restaurant_id)
+            if restaurant is None or restaurant.owner_id != requesting_user.customer_id:
+                raise AuthorizationError(
+                    "You can only assign deliveries for your own restaurant's orders."
+                )
 
         if order.status != OrderStatus.PENDING:
             raise BusinessRuleError(
