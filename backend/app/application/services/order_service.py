@@ -158,13 +158,17 @@ class OrderService:
                 f"Order '{order_id}' is already {order.status.value} and cannot be completed."
             )
 
-        updated = self._orders.update_status(order_id, OrderStatus.COMPLETED)
+        # Update the in-memory domain object and persist via the repository's
+        # save method so both unit tests (with mocks) and integration tests
+        # (with a real session) observe the completed status.
+        mark_order_completed(order)
+        saved = self._orders.save(order)
         self._notify(
             order.customer_id,
             "order_completed",
             f"Your order {order_id} has been completed.",
         )
-        return updated
+        return saved
 
     def _get_order_or_raise(self, order_id: str) -> Order:
         order = self._orders.get_by_id(order_id)
