@@ -29,7 +29,7 @@ class MockPaymentService:
     def __init__(self, behavior="success"):
         self.behavior = behavior
 
-    def process_payment(self, order_id, user):
+    def process_payment(self, order_id, user, promo_discount=0):
         if self.behavior == "not_found":
             raise NotFoundError("Order not found")
         if self.behavior == "unauthorized":

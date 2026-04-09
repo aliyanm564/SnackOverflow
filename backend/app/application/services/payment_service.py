@@ -35,7 +35,7 @@ class PaymentService:
         self._processor = payment_processor or _default_simulated_processor
         self._notifications = notification_service
 
-    def process_payment(self, order_id: str, customer) -> PaymentResult:
+    def process_payment(self, order_id: str, customer, promo_discount: float = 0) -> PaymentResult:
         order = self._orders.get_by_id(order_id)
         if order is None:
             raise NotFoundError(f"Order '{order_id}' not found.")
@@ -50,7 +50,7 @@ class PaymentService:
             raise AuthorizationError("You can only pay for your own orders.")
 
         breakdown = self._pricing.get_price_breakdown(order_id, customer)
-        amount = breakdown.grand_total
+        amount = max(0, breakdown.grand_total - promo_discount)
 
         approved = self._processor(amount)
 
